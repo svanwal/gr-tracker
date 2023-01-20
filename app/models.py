@@ -136,3 +136,14 @@ class Post(SearchableMixin, db.Model):
 
     def __repr__(self):
         return '<Post {}>'.format(self.body)
+
+
+class Trail(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    displayname = db.Column(db.String(30), unique=True, nullable=False)
+    fullname = db.Column(db.String(150), unique=True, nullable=False)
+    length = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<Trail {self.displayname}: {self.fullname} ({self.length} km)>"

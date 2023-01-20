@@ -1,7 +1,7 @@
 from flask import request
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField
-from wtforms.validators import ValidationError, DataRequired, Length
+from wtforms import StringField, SubmitField, TextAreaField, FloatField
+from wtforms.validators import ValidationError, DataRequired, Length, NumberRange
 from flask_babel import _, lazy_gettext as _l
 from app.models import User
 
@@ -41,3 +41,17 @@ class SearchForm(FlaskForm):
         if 'meta' not in kwargs:
             kwargs['meta'] = {'csrf': False}
         super(SearchForm, self).__init__(*args, **kwargs)
+
+
+class EditTrailForm(FlaskForm):
+    displayname = StringField(_l('Display name'), validators=[DataRequired()])
+    fullname = StringField(_l('Full name'), validators=[DataRequired()])
+    length = FloatField(_l('Length'), validators=[DataRequired(),NumberRange(min=0)])
+    submit = SubmitField(_l('Submit'))
+
+    def __init__(self, original_displayname, original_fullname, original_length, *args, **kwargs):
+        super(EditTrailForm, self).__init__(*args, **kwargs)
+        self.original_displayname = original_displayname
+        self.original_fullname = original_fullname
+        self.original_length = original_length
+        

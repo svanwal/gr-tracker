@@ -1,0 +1,11 @@
+<table class="table table-hover">
+    <tr>
+        <td>
+            <a href="{{ url_for('main.trail', displayname=trail.displayname) }}">
+                {{trail.displayname}}
+            </a>
+        </td>
+        <td>{{trail.fullname}}</td>
+        <td>{{trail.length}} km</td>
+    </tr>
+</table>

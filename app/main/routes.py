@@ -6,7 +6,7 @@ from flask_babel import _, get_locale
 from langdetect import detect, LangDetectException
 from app import db
 from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm
-from app.models import User, Post
+from app.models import User, Post, Trail
 from app.translate import translate
 from app.main import bp
 
@@ -62,6 +62,22 @@ def explore():
         if posts.has_prev else None
     return render_template('index.html', title=_('Explore'),
                            posts=posts.items, next_url=next_url,
+                           prev_url=prev_url)
+
+
+@bp.route('/trail')
+@login_required
+def trail():
+    page = request.args.get('page', 1, type=int)
+    trails = Trail.query.order_by(Trail.timestamp.desc()).paginate(
+        page=page, per_page=current_app.config['POSTS_PER_PAGE'],
+        error_out=False)
+    next_url = url_for('main.trail', page=trails.next_num) \
+        if trails.has_next else None
+    prev_url = url_for('main.trail', page=trails.prev_num) \
+        if trails.has_prev else None
+    return render_template('trail.html', title=_('Trails'),
+                           trails=trails.items, next_url=next_url,
                            prev_url=prev_url)
 
 
