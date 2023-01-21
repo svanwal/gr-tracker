@@ -12,7 +12,11 @@
 
 <h1>Your hikes:</h1>
 {% for hike in hikes %}
-{% include '_hike.html' %}
+<table class="table table-hover">
+    <tr>
+        <td>You hiked from km {{hike.km_start}} to km {{hike.km_end}} on the {{hike.path.displayname}} </td>
+    </tr>
+</table>
 {% endfor %}
 
 {% endblock %}

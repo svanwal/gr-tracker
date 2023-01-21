@@ -145,6 +145,7 @@ class Trail(db.Model):
     fullname = db.Column(db.String(150), unique=True, nullable=False)
     length = db.Column(db.Float, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    hikes = db.relationship('Hike', backref='path', lazy='dynamic')
 
     def __repr__(self):
         return f"<Trail {self.displayname}: {self.fullname} ({self.length} km)>"
