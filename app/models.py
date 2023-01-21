@@ -147,3 +147,9 @@ class Trail(db.Model):
 
     def __repr__(self):
         return f"<Trail {self.displayname}: {self.fullname} ({self.length} km)>"
+
+
+# class Hike(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     trail_id = db.Column(db.Integer, db.ForeignKey('trail.id'))
+#     timestamp = db.Column(db.Date, index=True, default=date.utcnow)

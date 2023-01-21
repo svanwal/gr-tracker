@@ -68,20 +68,25 @@ def explore():
 @bp.route('/trail', methods=['GET','POST'])
 @login_required
 def trail():
+    print("inside trail function")
     form = EditTrailForm()
     trails = Trail.query.order_by(Trail.displayname).all()
+    print("A")
     if form.validate_on_submit():
+        print("B1")
+        print("adding new trail")
         new_trail = Trail(displayname=form.displayname.data, fullname=form.fullname.data, length=form.length.data)
         db.session.add(new_trail)
         db.session.commit()
         flash('You have added a new trail.')
         return redirect(url_for('main.trail'))
-    elif request.method == 'GET':
+    else:
+        print("B2")
         return render_template(
             'trail.html',
             title='Trails',
             trails=trails,
-            form=form
+            form=form,
         )
 
 
