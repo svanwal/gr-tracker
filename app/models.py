@@ -65,6 +65,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
     posts = db.relationship('Post', backref='author', lazy='dynamic')
+    hikes = db.relationship('Hike', backref='walker', lazy='dynamic')
     about_me = db.Column(db.String(140))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     followed = db.relationship(
@@ -149,7 +150,13 @@ class Trail(db.Model):
         return f"<Trail {self.displayname}: {self.fullname} ({self.length} km)>"
 
 
-# class Hike(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     trail_id = db.Column(db.Integer, db.ForeignKey('trail.id'))
-#     timestamp = db.Column(db.Date, index=True, default=date.utcnow)
+class Hike(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    trail_id = db.Column(db.Integer, db.ForeignKey('trail.id'))
+    timestamp = db.Column(db.Date, index=True, default=datetime.utcnow)
+    km_start = db.Column(db.Float, nullable=False)
+    km_end = db.Column(db.Float, nullable=False)
+    
+    def __repr__(self):
+        return f"<Hike by user {self.user_id} on trail {self.trail_id}, km {self.km_start} to {self.km_end}>"

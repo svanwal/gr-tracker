@@ -5,8 +5,8 @@ from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from langdetect import detect, LangDetectException
 from app import db
-from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTrailForm
-from app.models import User, Post, Trail
+from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTrailForm, HikeForm
+from app.models import User, Post, Trail, Hike
 from app.translate import translate
 from app.main import bp
 
@@ -24,29 +24,22 @@ def before_request():
 @bp.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-    form = PostForm()
-    if form.validate_on_submit():
-        try:
-            language = detect(form.post.data)
-        except LangDetectException:
-            language = ''
-        post = Post(body=form.post.data, author=current_user,
-                    language=language)
-        db.session.add(post)
+    hikeform = HikeForm()
+    if hikeform.validate_on_submit():
+        print(f"submitted form kms are {hikeform.km_start.data} {hikeform.km_end.data}")
+        hike = Hike(
+            km_start=hikeform.km_start.data,
+            km_end=hikeform.km_end.data,
+            trail_id=hikeform.trail.data,
+            walker=current_user,
+        )
+        print(f"Received new hike from km {hike.km_start} to {hike.km_end}")
+        db.session.add(hike)
         db.session.commit()
-        flash(_('Your post is now live!'))
+        flash('Hike submission received!')
         return redirect(url_for('main.index'))
-    page = request.args.get('page', 1, type=int)
-    posts = current_user.followed_posts().paginate(
-        page=page, per_page=current_app.config['POSTS_PER_PAGE'],
-        error_out=False)
-    next_url = url_for('main.index', page=posts.next_num) \
-        if posts.has_next else None
-    prev_url = url_for('main.index', page=posts.prev_num) \
-        if posts.has_prev else None
-    return render_template('index.html', title=_('Home'), form=form,
-                           posts=posts.items, next_url=next_url,
-                           prev_url=prev_url)
+    hikes = Hike.query.order_by(Hike.timestamp.desc()).all()
+    return render_template('index.html', title='Home', form=hikeform, hikes=hikes)
 
 
 @bp.route('/explore')
@@ -68,20 +61,15 @@ def explore():
 @bp.route('/trail', methods=['GET','POST'])
 @login_required
 def trail():
-    print("inside trail function")
     form = EditTrailForm()
     trails = Trail.query.order_by(Trail.displayname).all()
-    print("A")
     if form.validate_on_submit():
-        print("B1")
-        print("adding new trail")
         new_trail = Trail(displayname=form.displayname.data, fullname=form.fullname.data, length=form.length.data)
         db.session.add(new_trail)
         db.session.commit()
         flash('You have added a new trail.')
         return redirect(url_for('main.trail'))
     else:
-        print("B2")
         return render_template(
             'trail.html',
             title='Trails',
