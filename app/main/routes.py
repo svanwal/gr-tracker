@@ -5,7 +5,7 @@ from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 from langdetect import detect, LangDetectException
 from app import db
-from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm
+from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTrailForm
 from app.models import User, Post, Trail
 from app.translate import translate
 from app.main import bp
@@ -65,20 +65,69 @@ def explore():
                            prev_url=prev_url)
 
 
-@bp.route('/trail')
+@bp.route('/trail', methods=['GET','POST'])
 @login_required
 def trail():
-    page = request.args.get('page', 1, type=int)
-    trails = Trail.query.order_by(Trail.timestamp.desc()).paginate(
-        page=page, per_page=current_app.config['POSTS_PER_PAGE'],
-        error_out=False)
-    next_url = url_for('main.trail', page=trails.next_num) \
-        if trails.has_next else None
-    prev_url = url_for('main.trail', page=trails.prev_num) \
-        if trails.has_prev else None
-    return render_template('trail.html', title=_('Trails'),
-                           trails=trails.items, next_url=next_url,
-                           prev_url=prev_url)
+    form = EditTrailForm()
+    trails = Trail.query.order_by(Trail.displayname).all()
+    if form.validate_on_submit():
+        new_trail = Trail(displayname=form.displayname.data, fullname=form.fullname.data, length=form.length.data)
+        db.session.add(new_trail)
+        db.session.commit()
+        flash('You have added a new trail.')
+        return redirect(url_for('main.trail'))
+    elif request.method == 'GET':
+        return render_template(
+            'trail.html',
+            title='Trails',
+            trails=trails,
+            form=form
+        )
+
+
+@bp.route('/trail/<displayname>', methods=['GET', 'DELETE'])
+@login_required
+def trail_detail(displayname):
+    trail = Trail.query.filter_by(displayname=displayname).first_or_404()
+    emptyform = EmptyForm()
+    if request.method == 'DELETE':
+        db.session.delete(trail)
+        db.session.commit()
+        return redirect(url_for('main.trail'))
+    return render_template('trail_detail.html',title='Trail detail',trail=trail,form=emptyform)
+
+
+@bp.route('/trail/<displayname>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_trail(displayname):
+    trail = Trail.query.filter_by(displayname=displayname).first_or_404()
+    form = EditTrailForm(
+        original_displayname=trail.displayname,
+        original_fullname=trail.fullname,
+        original_length=trail.length
+    )
+    if form.validate_on_submit():
+        trail.displayname = form.displayname.data
+        trail.fullname = form.fullname.data
+        trail.length = form.length.data
+        db.session.commit()
+        flash('Your changes have been saved.')
+        return redirect(url_for('main.trail_detail',displayname=trail.displayname))
+    elif request.method == 'GET':
+        form.displayname.data = trail.displayname
+        form.fullname.data = trail.fullname
+        form.length.data = trail.length
+    return render_template('edit_trail.html', title='Edit Trail',form=form)
+
+
+@bp.route('/trail/<displayname>/delete')
+@login_required
+def delete_trail(displayname):
+    trail = Trail.query.filter_by(displayname=displayname).first_or_404()
+    db.session.delete(trail)
+    db.session.commit()
+    flash('Trail deleted.')
+    return redirect(url_for('main.trail'))
 
 
 @bp.route('/user/<username>')

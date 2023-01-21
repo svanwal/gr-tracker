@@ -49,7 +49,7 @@ class EditTrailForm(FlaskForm):
     length = FloatField(_l('Length'), validators=[DataRequired(),NumberRange(min=0)])
     submit = SubmitField(_l('Submit'))
 
-    def __init__(self, original_displayname, original_fullname, original_length, *args, **kwargs):
+    def __init__(self, original_displayname="", original_fullname="", original_length=0, *args, **kwargs):
         super(EditTrailForm, self).__init__(*args, **kwargs)
         self.original_displayname = original_displayname
         self.original_fullname = original_fullname

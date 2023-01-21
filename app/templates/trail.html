@@ -3,11 +3,47 @@
 
 {% block app_content %}
 <h1>List of hiking trails</h1>
+<table class="table table-hover">
+    <tr>
+        <td>Display name</td>
+        <td>Full name</td>
+        <td>Length [km]</td>
+    </tr>
+    {% for trail in trails %}
+    <tr>
+        <td>
+            <a href="{{ url_for('main.trail_detail', displayname=trail.displayname) }}">
+                {{trail.displayname}}
+            </a>
+        </td>
+        <td>{{trail.fullname}}</td>
+        <td>{{trail.length}} km</td>
+    </tr>
+    {% endfor %}
+</table>
+
+<h1>Add new trail</h1>
 {% if form %}
-{{ wtf.quick_form(form) }}
-<br>
+<form action="" method="post" class="form" role="form">
+    <!-- {{ form.csrf_token() }} -->
+    <div class="row">
+        <div class="form-group col-md-3">
+            {{ wtf.form_field(form.displayname, class='form-control', 
+         placeholder='Display name') }}
+        </div>
+        <div class="form-group col-md-3">
+            {{ wtf.form_field(form.fullname, class='form-control', 
+         placeholder='Full name') }}
+        </div>
+        <div class="form-group col-md-3">
+            {{ wtf.form_field(form.length, class='form-control', 
+           placeholder='Length') }}
+        </div>
+        <div class="form-group col-md-3 align-bottom">
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </div>
+</form>
 {% endif %}
-{% for trail in trails %}
-{% include '_trail.html' %}
-{% endfor %}
+
 {% endblock %}

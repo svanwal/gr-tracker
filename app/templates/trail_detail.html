@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+<h1>Detail of hiking trail {{trail.displayname}}</h1>
+<p>Display name: {{trail.displayname}}</p>
+<p>Full name: {{trail.fullname}}</p>
+<p>Length: {{trail.length}}</p>
+<p><a href="{{ url_for('main.edit_trail', displayname=trail.displayname) }}">Edit this trail</a></p>
+<p><a href="{{ url_for('main.delete_trail', displayname=trail.displayname) }}">Delete this trail</a></p>
+
+{% endblock %}
