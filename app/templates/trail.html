@@ -24,7 +24,8 @@
 
 <h1>Add new trail</h1>
 {% if form %}
-<form action="" method="post" class="form" role="form">
+{{ wtf.quick_form(form) }}
+<!-- <form action="" method="post" class="form" role="form">
     {{ form.csrf_token() }}
     <div class="row">
         <div class="form-group col-md-3">
@@ -43,7 +44,7 @@
             <button type="submit" class="btn btn-primary">Submit</button>
         </div>
     </div>
-</form>
+</form> -->
 {% endif %}
 
 {% endblock %}

@@ -9,4 +9,73 @@
 <p><a href="{{ url_for('main.edit_trail', displayname=trail.displayname) }}">Edit this trail</a></p>
 <p><a href="{{ url_for('main.delete_trail', displayname=trail.displayname) }}">Delete this trail</a></p>
 
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.js'></script>
+
+<div class="container">
+    <div id='map' style='width: 600px; height: 400px;'></div>
+    <pre id="info"></pre>
+
+    <script>
+        // display
+        mapboxgl.accessToken = 'pk.eyJ1IjoianNvbWEiLCJhIjoibFJmYl9JWSJ9.AUm8d76cbOvVEn2mMeG_ZA';
+        const center = JSON.parse('{{ center_raw | tojson }}');
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/outdoors-v9',
+            center: center,
+            zoom: 7,
+        });
+        const coords = JSON.parse('{{ coords_raw | tojson }}');
+        const marker = new mapboxgl.Marker({
+            color: '#F84C4C' // color it red
+        });
+        map.on('load', function () {
+            map.addSource('route', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': coords
+                    }
+                }
+            });
+            map.addLayer({
+                'id': 'route',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#000000',
+                    'line-width': 3
+                }
+            });
+        })
+        // events
+        map.on('mousemove', (e) => {
+            let delta = [];
+            for (let i = 0; i < coords.length; i++) {
+                let del_x = coords[i][0] - e.lngLat.lng
+                let del_y = coords[i][1] - e.lngLat.lat
+                let del = del_x * del_x + del_y * del_y
+                delta.push(del)
+            }
+            let del_min = Math.min.apply(Math, delta);
+            let i_min = delta.indexOf(del_min);
+            document.getElementById('info').innerHTML =
+                "Cursor is at lat "
+                + Math.round(100 * e.lngLat.lng) / 100
+                + ", lon "
+                + Math.round(100 * e.lngLat.lat) / 100
+                + ", which is d = " + Math.round(100 * Math.sqrt(del_min)) / 100 + " from trail";
+            marker.setLngLat([coords[i_min][0], coords[i_min][1]]);
+            marker.addTo(map);
+        });
+    </script>
+</div>
+
 {% endblock %}

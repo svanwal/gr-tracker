@@ -7,6 +7,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 from app import db, login
 from app.search import add_to_index, remove_from_index, query_index
+from sqlalchemy.ext.mutable import MutableList
+from sqlalchemy.types import PickleType
 
 
 class SearchableMixin(object):
@@ -146,6 +148,7 @@ class Trail(db.Model):
     length = db.Column(db.Float, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     hikes = db.relationship('Hike', backref='path', lazy='dynamic')
+    filename = db.Column(db.String(150), nullable=False)
 
     def __repr__(self):
         return f"<Trail {self.displayname}: {self.fullname} ({self.length} km)>"

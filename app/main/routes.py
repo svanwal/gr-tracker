@@ -3,6 +3,7 @@ from flask import render_template, flash, redirect, url_for, request, g, \
     jsonify, current_app
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
+import csv
 from langdetect import detect, LangDetectException
 from app import db
 from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, EditTrailForm, HikeForm
@@ -64,7 +65,7 @@ def trail():
     form = EditTrailForm()
     trails = Trail.query.order_by(Trail.displayname).all()
     if form.validate_on_submit():
-        new_trail = Trail(displayname=form.displayname.data, fullname=form.fullname.data, length=form.length.data)
+        new_trail = Trail(displayname=form.displayname.data, fullname=form.fullname.data, length=form.length.data, filename=form.filename.data)
         db.session.add(new_trail)
         db.session.commit()
         flash('You have added a new trail.')
@@ -83,11 +84,18 @@ def trail():
 def trail_detail(displayname):
     trail = Trail.query.filter_by(displayname=displayname).first_or_404()
     emptyform = EmptyForm()
+    filename = f"app/static/{trail.filename}"
+    with open(filename, newline='') as f:
+        reader = csv.reader(f)
+        next(reader, None)
+        data = list(reader)
+    coords = [[float(row[1]),float(row[0])] for row in data]
+    center = coords[int(len(coords)/2)]
     if request.method == 'DELETE':
         db.session.delete(trail)
         db.session.commit()
         return redirect(url_for('main.trail'))
-    return render_template('trail_detail.html',title='Trail detail',trail=trail,form=emptyform)
+    return render_template('trail_detail.html',title='Trail detail',trail=trail,form=emptyform,coords_raw=coords,center_raw=center)
 
 
 @bp.route('/trail/<displayname>/edit', methods=['GET', 'POST'])

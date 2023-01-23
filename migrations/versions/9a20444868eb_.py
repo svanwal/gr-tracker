@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: aea2cb047cd8
+Revision ID: 9a20444868eb
 Revises: 
-Create Date: 2023-01-21 14:50:53.840246
+Create Date: 2023-01-23 11:52:51.711358
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'aea2cb047cd8'
+revision = '9a20444868eb'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -24,6 +24,7 @@ def upgrade():
     sa.Column('fullname', sa.String(length=150), nullable=False),
     sa.Column('length', sa.Float(), nullable=False),
     sa.Column('timestamp', sa.DateTime(), nullable=True),
+    sa.Column('filename', sa.String(length=150), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('displayname'),
     sa.UniqueConstraint('fullname')
@@ -52,11 +53,13 @@ def upgrade():
     )
     op.create_table('hike',
     sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('trail_id', sa.Integer(), nullable=True),
     sa.Column('timestamp', sa.Date(), nullable=True),
     sa.Column('km_start', sa.Float(), nullable=False),
     sa.Column('km_end', sa.Float(), nullable=False),
     sa.ForeignKeyConstraint(['trail_id'], ['trail.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     with op.batch_alter_table('hike', schema=None) as batch_op:
