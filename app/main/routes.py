@@ -11,6 +11,7 @@ from app.models import User, Post, Trail, Hike
 from app.translate import translate
 from app.main import bp
 from app.main.geometry import process_gpx
+import math
 
 
 @bp.before_app_request
@@ -34,6 +35,7 @@ def index():
             km_end=hikeform.km_end.data,
             trail_id=hikeform.trail.data,
             walker=current_user,
+            d = abs(hikeform.km_start.data - hikeform.km_end.data)
         )
         print(f"Received new hike from km {hike.km_start} to {hike.km_end}")
         db.session.add(hike)
@@ -44,20 +46,40 @@ def index():
     return render_template('index.html', title='Home', form=hikeform, hikes=hikes)
 
 
-@bp.route('/explore')
+@bp.route('/hike')
 @login_required
-def explore():
-    page = request.args.get('page', 1, type=int)
-    posts = Post.query.order_by(Post.timestamp.desc()).paginate(
-        page=page, per_page=current_app.config['POSTS_PER_PAGE'],
-        error_out=False)
-    next_url = url_for('main.explore', page=posts.next_num) \
-        if posts.has_next else None
-    prev_url = url_for('main.explore', page=posts.prev_num) \
-        if posts.has_prev else None
-    return render_template('index.html', title=_('Explore'),
-                           posts=posts.items, next_url=next_url,
-                           prev_url=prev_url)
+def hike():
+    hikes = Hike.query.order_by(Hike.timestamp.desc()).all()
+    return render_template('hike.html', title='Hike', hikes=hikes)
+
+
+@bp.route('/myhikes')
+@login_required
+def myhikes():
+    hikes = Hike.query.where(Hike.user_id==current_user.id).order_by(Hike.timestamp.desc()).all()
+    return render_template('hike.html', title='Hike', hikes=hikes)
+
+
+@bp.route('/hike_detail/<hike_id>')
+@login_required
+def hike_detail(hike_id):
+    hike = Hike.query.where(Hike.id==hike_id).one()
+    trail = hike.path
+    # grab trail coords
+    with open(trail.filename_processed, newline='') as f:
+        reader = csv.reader(f)
+        next(reader, None)
+        data = list(reader)
+    coords = [[float(row[1]),float(row[0])] for row in data]
+    dcum = [float(row[3]) for row in data]
+    center = coords[int(len(coords)/2)]
+    # grab subset covered by hike
+    dcum_start = min(dcum, key=lambda x:abs(x-hike.km_start))
+    i_start = dcum.index(dcum_start)
+    dcum_end = min(dcum, key=lambda x:abs(x-hike.km_end))
+    i_end = dcum.index(dcum_end)
+    hike_coords = coords[i_start:i_end]
+    return render_template('hike_detail.html', title='Hike', hike=hike, trail=trail, coords_raw=coords, center_raw=center, dcum_raw=dcum, hike_coords_raw=hike_coords)
 
 
 @bp.route('/trail', methods=['GET','POST'])
@@ -84,6 +106,47 @@ def trail():
             form=form,
         )
 
+@bp.route('/mytrails', methods=['GET'])
+@login_required
+def mytrails():
+    trails = db.session.query(Trail).join(Hike, Hike.trail_id == Trail.id, isouter=True).where(Hike.user_id==current_user.id).all()
+    return render_template(
+        'mytrails.html',
+        title='Trails',
+        trails=trails,
+    )
+
+
+@bp.route('/mytrails_detail/<displayname>', methods=['GET'])
+@login_required
+def mytrails_detail(displayname):
+    trail = db.session.query(Trail).where(Trail.displayname==displayname).one()
+    hikes = db.session.query(Hike).where(Hike.trail_id==trail.id).where(Hike.user_id==current_user.id).all()
+    with open(trail.filename_processed, newline='') as f:
+        reader = csv.reader(f)
+        next(reader, None)
+        data = list(reader)
+    coords = [[float(row[1]),float(row[0])] for row in data]
+    dcum = [float(row[3]) for row in data]
+    center = coords[int(len(coords)/2)]
+    hike_coords = []
+    for hike in hikes:
+        # grab subset covered by hike
+        dcum_start = min(dcum, key=lambda x:abs(x-hike.km_start))
+        i_start = dcum.index(dcum_start)
+        dcum_end = min(dcum, key=lambda x:abs(x-hike.km_end))
+        i_end = dcum.index(dcum_end)
+        hike_coords.append(coords[i_start:i_end])
+    print('n of hikes')
+    print(len(hike_coords))
+    return render_template(
+        'mytrails_detail.html',
+        title='Trails',
+        trail=trail,
+        raw_hikes=hike_coords,
+        coords_raw=coords,center_raw=center,dcum_raw=dcum,
+        username=current_user.username,
+    )
 
 @bp.route('/trail/<displayname>', methods=['GET', 'DELETE'])
 @login_required
@@ -137,6 +200,18 @@ def delete_trail(displayname):
     db.session.commit()
     flash('Trail deleted.')
     return redirect(url_for('main.trail'))
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 @bp.route('/user/<username>')
@@ -235,3 +310,19 @@ def search():
         if page > 1 else None
     return render_template('search.html', title=_('Search'), posts=posts,
                            next_url=next_url, prev_url=prev_url)
+
+
+@bp.route('/explore')
+@login_required
+def explore():
+    page = request.args.get('page', 1, type=int)
+    posts = Post.query.order_by(Post.timestamp.desc()).paginate(
+        page=page, per_page=current_app.config['POSTS_PER_PAGE'],
+        error_out=False)
+    next_url = url_for('main.explore', page=posts.next_num) \
+        if posts.has_next else None
+    prev_url = url_for('main.explore', page=posts.prev_num) \
+        if posts.has_prev else None
+    return render_template('index.html', title=_('Explore'),
+                           posts=posts.items, next_url=next_url,
+                           prev_url=prev_url)

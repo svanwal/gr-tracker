@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+<h1>Hikes on trail {{trail.displayname}} by user {{username}}</h1>
+<p>Display name: {{trail.displayname}}</p>
+<p>Full name: {{trail.fullname}}</p>
+<p>Length: {{trail.length}} km</p>
+
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.js'></script>
+
+<div class="container">
+    <div id='map' style='width: 1000px; height: 450px;'></div>
+    <pre id="info"></pre>
+
+    <script>
+        // display
+        mapboxgl.accessToken = 'pk.eyJ1IjoianNvbWEiLCJhIjoibFJmYl9JWSJ9.AUm8d76cbOvVEn2mMeG_ZA';
+        const coords = JSON.parse('{{ coords_raw | tojson }}');
+        const center = JSON.parse('{{ center_raw | tojson }}');
+        const dcum = JSON.parse('{{ dcum_raw | tojson }}');
+        const test = JSON.parse('{{ raw_hikes | tojson }}');
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/outdoors-v9',
+            center: center,
+            zoom: 7,
+        });
+        const marker = new mapboxgl.Marker({
+            color: '#F84C4C' // color it red
+        });
+        map.on('load', function () {
+            map.addSource('route', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': coords
+                    }
+                }
+            });
+            map.addLayer({
+                'id': 'route',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#000000',
+                    'line-width': 3
+                }
+            });
+            // hikes
+            for (let i = 0; i < test.length; i++) {
+                const hike = test[i];
+                map.addSource(`route${i}`, {
+                    'type': 'geojson',
+                    'data': {
+                        'type': 'Feature',
+                        'properties': {},
+                        'geometry': {
+                            'type': 'LineString',
+                            'coordinates': hike
+                        }
+                    }
+                });
+                map.addLayer({
+                    'id': `route${i}`,
+                    'type': 'line',
+                    'source': `route${i}`,
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    'paint': {
+                        'line-color': '#00FF00',
+                        'line-width': 5
+                    }
+                });
+            }
+        })
+        // events
+        map.on('mousemove', (e) => {
+            let delta = [];
+            for (let i = 0; i < coords.length; i++) {
+                let del_x = coords[i][0] - e.lngLat.lng
+                let del_y = coords[i][1] - e.lngLat.lat
+                let del = del_x * del_x + del_y * del_y
+                delta.push(del)
+            }
+            let del_min = Math.min.apply(Math, delta);
+            let i_min = delta.indexOf(del_min);
+            let current_dcum = Math.round(10 * dcum[i_min]) / 10
+            document.getElementById('info').innerHTML = "Cursor is at " + current_dcum + " km"
+            marker.setLngLat([coords[i_min][0], coords[i_min][1]]);
+            marker.addTo(map);
+        });
+    </script>
+</div>
+
+{% endblock %}

@@ -2,7 +2,7 @@ from flask import request
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, TextAreaField, FloatField, DateField, SelectField
 from flask_wtf.file import FileField, FileRequired
-from wtforms.validators import ValidationError, DataRequired, Length, NumberRange
+from wtforms.validators import ValidationError, DataRequired, Length, NumberRange, InputRequired
 from flask_babel import _, lazy_gettext as _l
 from app.models import User, Trail
 from datetime import datetime
@@ -60,8 +60,8 @@ class EditTrailForm(FlaskForm):
 class HikeForm(FlaskForm):
     trail = SelectField('Trail', validators=[DataRequired()])
     timestamp = DateField('Date', validators=[DataRequired()])
-    km_start = FloatField('Start km', validators=[DataRequired()])
-    km_end = FloatField('End km', validators=[DataRequired()])
+    km_start = FloatField('Start km', validators=[InputRequired()])
+    km_end = FloatField('End km', validators=[InputRequired()])
     submit = SubmitField('Submit')
 
     def __init__(self, og_timestamp=datetime.utcnow, og_km_start=99, og_km_end=101, *args, **kwargs):
@@ -70,3 +70,15 @@ class HikeForm(FlaskForm):
         self.og_km_start = og_km_start
         self.og_km_end = og_km_end
         self.trail.choices = [(t.id, t.displayname) for t in Trail.query.order_by(Trail.displayname).all()]
+
+    def validate_km_start(self, form):
+        trail_id = self.trail.data
+        t = Trail.query.where(Trail.id==trail_id).one()
+        if self.km_start.data > t.length or self.km_start.data < 0:
+            raise ValidationError(f"The {t.displayname} has a length of {t.length} km, so this value must be between 0 and {t.length}")
+
+    def validate_km_end(self, form):
+        trail_id = self.trail.data
+        t = Trail.query.where(Trail.id==trail_id).one()
+        if self.km_end.data > t.length or self.km_end.data < 0:
+            raise ValidationError(f"The {t.displayname} has a length of {t.length} km, so this value must be between 0 and {t.length}")

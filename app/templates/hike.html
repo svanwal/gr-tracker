@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+<h1>List of all hikes</h1>
+
+<table class="table table-hover">
+    <tr>
+        <td>User</td>
+        <td>Date</td>
+        <td>Trail</td>
+        <td>Distance</td>
+        <td>Start km</td>
+        <td>End km</td>
+        <td></td>
+    </tr>
+    {% for hike in hikes %}
+    <tr>
+        <td>{{hike.walker.username}}</td>
+        <td>{{hike.timestamp}}</td>
+        <td>{{hike.path.displayname}}</td>
+        <td>{{hike.d}}</td>
+        <td>{{hike.km_start}}</td>
+        <td>{{hike.km_end}}</td>
+        <td>
+            <a href="{{ url_for('main.hike_detail', hike_id=hike.id) }}">
+                View hike
+            </a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

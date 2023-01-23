@@ -168,6 +168,7 @@ class Hike(db.Model):
     timestamp = db.Column(db.Date, index=True, default=datetime.utcnow)
     km_start = db.Column(db.Float, nullable=False)
     km_end = db.Column(db.Float, nullable=False)
+    d = db.Column(db.Float)
     
     def __repr__(self):
         return f"<Hike by user {self.user_id} on trail {self.trail_id}, km {self.km_start} to {self.km_end}>"
