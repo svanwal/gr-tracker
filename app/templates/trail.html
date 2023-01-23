@@ -25,26 +25,6 @@
 <h1>Add new trail</h1>
 {% if form %}
 {{ wtf.quick_form(form) }}
-<!-- <form action="" method="post" class="form" role="form">
-    {{ form.csrf_token() }}
-    <div class="row">
-        <div class="form-group col-md-3">
-            {{ wtf.form_field(form.displayname, class='form-control', 
-         placeholder='Display name') }}
-        </div>
-        <div class="form-group col-md-3">
-            {{ wtf.form_field(form.fullname, class='form-control', 
-         placeholder='Full name') }}
-        </div>
-        <div class="form-group col-md-3">
-            {{ wtf.form_field(form.length, class='form-control', 
-           placeholder='Length') }}
-        </div>
-        <div class="form-group col-md-3 align-bottom">
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </div>
-    </div>
-</form> -->
 {% endif %}
 
 {% endblock %}

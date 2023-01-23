@@ -5,7 +5,7 @@
 <h1>Detail of hiking trail {{trail.displayname}}</h1>
 <p>Display name: {{trail.displayname}}</p>
 <p>Full name: {{trail.fullname}}</p>
-<p>Length: {{trail.length}}</p>
+<p>Length: {{trail.length}} km</p>
 <p><a href="{{ url_for('main.edit_trail', displayname=trail.displayname) }}">Edit this trail</a></p>
 <p><a href="{{ url_for('main.delete_trail', displayname=trail.displayname) }}">Delete this trail</a></p>
 
@@ -18,14 +18,15 @@
     <script>
         // display
         mapboxgl.accessToken = 'pk.eyJ1IjoianNvbWEiLCJhIjoibFJmYl9JWSJ9.AUm8d76cbOvVEn2mMeG_ZA';
+        const coords = JSON.parse('{{ coords_raw | tojson }}');
         const center = JSON.parse('{{ center_raw | tojson }}');
+        const dcum = JSON.parse('{{ dcum_raw | tojson }}');
         var map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/outdoors-v9',
             center: center,
             zoom: 7,
         });
-        const coords = JSON.parse('{{ coords_raw | tojson }}');
         const marker = new mapboxgl.Marker({
             color: '#F84C4C' // color it red
         });
@@ -66,12 +67,14 @@
             }
             let del_min = Math.min.apply(Math, delta);
             let i_min = delta.indexOf(del_min);
-            document.getElementById('info').innerHTML =
-                "Cursor is at lat "
-                + Math.round(100 * e.lngLat.lng) / 100
-                + ", lon "
-                + Math.round(100 * e.lngLat.lat) / 100
-                + ", which is d = " + Math.round(100 * Math.sqrt(del_min)) / 100 + " from trail";
+            // document.getElementById('info').innerHTML =
+            //     "Cursor is at lat "
+            //     + Math.round(100 * e.lngLat.lng) / 100
+            //     + ", lon "
+            //     + Math.round(100 * e.lngLat.lat) / 100
+            //     + ", which is d = " + Math.round(100 * Math.sqrt(del_min)) / 100 + " from trail";
+            let current_dcum = Math.round(10 * dcum[i_min]) / 10
+            document.getElementById('info').innerHTML = "Cursor is at " + current_dcum + " km"
             marker.setLngLat([coords[i_min][0], coords[i_min][1]]);
             marker.addTo(map);
         });

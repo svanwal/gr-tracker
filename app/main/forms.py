@@ -48,16 +48,13 @@ class SearchForm(FlaskForm):
 class EditTrailForm(FlaskForm):
     displayname = StringField('Display name', validators=[DataRequired()])
     fullname = StringField('Full name', validators=[DataRequired()])
-    length = FloatField('Length', validators=[DataRequired(),NumberRange(min=0)])
-    filename = StringField('Filename', validators=[DataRequired()])
+    gpx = FileField('File', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
-    def __init__(self, original_displayname="", original_fullname="", original_length=0, original_filename="", *args, **kwargs):
+    def __init__(self, original_displayname="", original_fullname="", *args, **kwargs):
         super(EditTrailForm, self).__init__(*args, **kwargs)
         self.original_displayname = original_displayname
         self.original_fullname = original_fullname
-        self.original_length = original_length
-        self.original_filename = original_filename
         
 
 class HikeForm(FlaskForm):

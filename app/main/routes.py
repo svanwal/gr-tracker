@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import render_template, flash, redirect, url_for, request, g, \
-    jsonify, current_app
+    jsonify, current_app, send_from_directory
 from flask_login import current_user, login_required
 from flask_babel import _, get_locale
 import csv
@@ -10,6 +10,7 @@ from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, Edi
 from app.models import User, Post, Trail, Hike
 from app.translate import translate
 from app.main import bp
+from app.main.geometry import process_gpx
 
 
 @bp.before_app_request
@@ -65,7 +66,12 @@ def trail():
     form = EditTrailForm()
     trails = Trail.query.order_by(Trail.displayname).all()
     if form.validate_on_submit():
-        new_trail = Trail(displayname=form.displayname.data, fullname=form.fullname.data, length=form.length.data, filename=form.filename.data)
+        new_trail = Trail(displayname=form.displayname.data, fullname=form.fullname.data, length=0)
+        # first just save the gpx file raw
+        form.gpx.data.save(new_trail.filename_raw)
+        # now process it into what we need
+        new_trail.length = process_gpx(new_trail.filename_raw, new_trail.filename_processed)
+        new_trail.length = round(new_trail.length,1)
         db.session.add(new_trail)
         db.session.commit()
         flash('You have added a new trail.')
@@ -84,18 +90,18 @@ def trail():
 def trail_detail(displayname):
     trail = Trail.query.filter_by(displayname=displayname).first_or_404()
     emptyform = EmptyForm()
-    filename = f"app/static/{trail.filename}"
-    with open(filename, newline='') as f:
+    with open(trail.filename_processed, newline='') as f:
         reader = csv.reader(f)
         next(reader, None)
         data = list(reader)
     coords = [[float(row[1]),float(row[0])] for row in data]
+    dcum = [float(row[3]) for row in data]
     center = coords[int(len(coords)/2)]
     if request.method == 'DELETE':
         db.session.delete(trail)
         db.session.commit()
         return redirect(url_for('main.trail'))
-    return render_template('trail_detail.html',title='Trail detail',trail=trail,form=emptyform,coords_raw=coords,center_raw=center)
+    return render_template('trail_detail.html',title='Trail detail',trail=trail,form=emptyform,coords_raw=coords,center_raw=center,dcum_raw=dcum)
 
 
 @bp.route('/trail/<displayname>/edit', methods=['GET', 'POST'])
@@ -105,19 +111,21 @@ def edit_trail(displayname):
     form = EditTrailForm(
         original_displayname=trail.displayname,
         original_fullname=trail.fullname,
-        original_length=trail.length
     )
     if form.validate_on_submit():
         trail.displayname = form.displayname.data
         trail.fullname = form.fullname.data
-        trail.length = form.length.data
+        # first just save the gpx file raw
+        form.gpx.data.save(trail.filename_raw)
+        # now process it into what we need
+        trail.length = process_gpx(trail.filename_raw, trail.filename_processed)
+        trail.length = round(trail.length,1)
         db.session.commit()
         flash('Your changes have been saved.')
         return redirect(url_for('main.trail_detail',displayname=trail.displayname))
     elif request.method == 'GET':
         form.displayname.data = trail.displayname
         form.fullname.data = trail.fullname
-        form.length.data = trail.length
     return render_template('edit_trail.html', title='Edit Trail',form=form)
 
 

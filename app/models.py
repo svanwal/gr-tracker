@@ -148,10 +148,17 @@ class Trail(db.Model):
     length = db.Column(db.Float, nullable=False)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     hikes = db.relationship('Hike', backref='path', lazy='dynamic')
-    filename = db.Column(db.String(150), nullable=False)
 
     def __repr__(self):
         return f"<Trail {self.displayname}: {self.fullname} ({self.length} km)>"
+
+    @property
+    def filename_raw(self):
+        return f"app/data/{self.displayname.lower()}_raw.csv"
+
+    @property
+    def filename_processed(self):
+        return f"app/data/{self.displayname.lower()}_processed.csv"
 
 
 class Hike(db.Model):
