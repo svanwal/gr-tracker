@@ -10,7 +10,7 @@ from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm, Edi
 from app.models import User, Post, Trail, Hike
 from app.translate import translate
 from app.main import bp
-from app.main.geometry import process_gpx
+# from app.main.geometry import process_gpx
 import math
 
 
@@ -117,30 +117,6 @@ def hike_add(displayname):
         return render_template('hike_add.html', title='Add new hike', form=hikeform, trail=trail, coords_raw=coords, center_raw=center, dcum_raw=dcum)
 
 
-@bp.route('/trail', methods=['GET','POST'])
-@login_required
-def trail():
-    form = EditTrailForm()
-    trails = Trail.query.order_by(Trail.displayname).all()
-    if form.validate_on_submit():
-        new_trail = Trail(displayname=form.displayname.data, fullname=form.fullname.data, length=0)
-        # first just save the gpx file raw
-        form.gpx.data.save(new_trail.filename_raw)
-        # now process it into what we need
-        new_trail.length = process_gpx(new_trail.filename_raw, new_trail.filename_processed)
-        new_trail.length = round(new_trail.length,1)
-        db.session.add(new_trail)
-        db.session.commit()
-        flash('You have added a new trail.')
-        return redirect(url_for('main.trail'))
-    else:
-        return render_template(
-            'trail.html',
-            title='Trails',
-            trails=trails,
-            form=form,
-        )
-
 @bp.route('/mytrails', methods=['GET'])
 @login_required
 def mytrails():
@@ -183,9 +159,37 @@ def mytrails_detail(displayname):
         username=current_user.username,
     )
 
-@bp.route('/trail/<displayname>', methods=['GET', 'DELETE'])
+## TRAIL ROUTES
+
+# Display a list of all trails
+@bp.route('/trails', methods=['GET'])
 @login_required
-def trail_detail(displayname):
+def show_trails():
+    form = EditTrailForm()
+    trails = Trail.query.order_by(Trail.displayname).all()
+    if form.validate_on_submit():
+        new_trail = Trail(displayname=form.displayname.data, fullname=form.fullname.data, length=0)
+        # first just save the gpx file raw
+        form.gpx.data.save(new_trail.filename_raw)
+        # now process it into what we need
+        new_trail.length = process_gpx(new_trail.filename_raw, new_trail.filename_processed)
+        new_trail.length = round(new_trail.length,1)
+        db.session.add(new_trail)
+        db.session.commit()
+        flash('You have added a new trail.')
+        return redirect(url_for('main.trail'))
+    else:
+        return render_template(
+            'trail.html',
+            title='Trails',
+            trails=trails,
+            form=form,
+        )
+
+# Display a single trail
+@bp.route('/trails/<displayname>', methods=['GET', 'DELETE'])
+@login_required
+def show_trail_detail(displayname):
     trail = Trail.query.filter_by(displayname=displayname).first_or_404()
     emptyform = EmptyForm()
     with open(trail.filename_processed, newline='') as f:
