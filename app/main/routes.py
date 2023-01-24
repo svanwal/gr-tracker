@@ -82,6 +82,22 @@ def hike_detail(hike_id):
     return render_template('hike_detail.html', title='Hike', hike=hike, trail=trail, coords_raw=coords, center_raw=center, dcum_raw=dcum, hike_coords_raw=hike_coords)
 
 
+@bp.route('/hike_add/<displayname>')
+@login_required
+def hike_add(displayname):
+    hikeform = HikeForm()
+    trail = Trail.query.where(Trail.displayname==displayname).one()
+    # grab trail coords
+    with open(trail.filename_processed, newline='') as f:
+        reader = csv.reader(f)
+        next(reader, None)
+        data = list(reader)
+    coords = [[float(row[1]),float(row[0])] for row in data]
+    dcum = [float(row[3]) for row in data]
+    center = coords[int(len(coords)/2)]
+    return render_template('hike_add.html', title='Hike', form=hikeform, trail=trail, coords_raw=coords, center_raw=center, dcum_raw=dcum)
+
+
 @bp.route('/trail', methods=['GET','POST'])
 @login_required
 def trail():

@@ -8,6 +8,7 @@
         <td>Display name</td>
         <td>Full name</td>
         <td>Length [km]</td>
+        <td>Add hike</td>
     </tr>
     {% for trail in trails %}
     <tr>
@@ -18,6 +19,11 @@
         </td>
         <td>{{trail.fullname}}</td>
         <td>{{trail.length}} km</td>
+        <td>
+            <a href="{{ url_for('main.hike_add', displayname=trail.displayname) }}">
+                Add hike on {{trail.displayname}}
+            </a>
+        </td>
     </tr>
     {% endfor %}
 </table>
