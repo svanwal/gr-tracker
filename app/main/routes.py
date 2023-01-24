@@ -82,20 +82,39 @@ def hike_detail(hike_id):
     return render_template('hike_detail.html', title='Hike', hike=hike, trail=trail, coords_raw=coords, center_raw=center, dcum_raw=dcum, hike_coords_raw=hike_coords)
 
 
-@bp.route('/hike_add/<displayname>')
+@bp.route('/hike_add/<displayname>', methods=['GET','POST'])
 @login_required
 def hike_add(displayname):
-    hikeform = HikeForm()
+    print("route for hike_add")
     trail = Trail.query.where(Trail.displayname==displayname).one()
-    # grab trail coords
-    with open(trail.filename_processed, newline='') as f:
-        reader = csv.reader(f)
-        next(reader, None)
-        data = list(reader)
-    coords = [[float(row[1]),float(row[0])] for row in data]
-    dcum = [float(row[3]) for row in data]
-    center = coords[int(len(coords)/2)]
-    return render_template('hike_add.html', title='Hike', form=hikeform, trail=trail, coords_raw=coords, center_raw=center, dcum_raw=dcum)
+    hikeform = HikeForm()
+    hikeform.set_trail(trail_id=trail.id)
+    # if hikeform.validate_on_submit():
+    if request.method == 'POST':
+        print('you submitted the form')
+        hike = Hike(
+            km_start=hikeform.km_start.data,
+            km_end=hikeform.km_end.data,
+            trail_id=hikeform.trail.data,
+            walker=current_user,
+            d = abs(hikeform.km_start.data - hikeform.km_end.data)
+        )
+        print(f"Received new hike from km {hike.km_start} to {hike.km_end}")
+        db.session.add(hike)
+        db.session.commit()
+        flash('Hike submission received!')
+        return redirect(url_for('main.index'))
+    else:
+        print('you did not submit the form')
+        # grab trail coords
+        with open(trail.filename_processed, newline='') as f:
+            reader = csv.reader(f)
+            next(reader, None)
+            data = list(reader)
+        coords = [[float(row[1]),float(row[0])] for row in data]
+        dcum = [float(row[3]) for row in data]
+        center = coords[int(len(coords)/2)]
+        return render_template('hike_add.html', title='Add new hike', form=hikeform, trail=trail, coords_raw=coords, center_raw=center, dcum_raw=dcum)
 
 
 @bp.route('/trail', methods=['GET','POST'])

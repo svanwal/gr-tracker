@@ -60,7 +60,6 @@ class EditTrailForm(FlaskForm):
 class HikeForm(FlaskForm):
     trail = SelectField('Trail', validators=[DataRequired()])
     timestamp = DateField('Date', validators=[DataRequired()])
-    # timestamp = DateTimeLocalField('Date', format='%m/%d/%y', validators=[DataRequired()])
     km_start = FloatField('Start km', validators=[InputRequired()])
     km_end = FloatField('End km', validators=[InputRequired()])
     submit = SubmitField('Submit')
@@ -72,14 +71,22 @@ class HikeForm(FlaskForm):
         self.og_km_end = og_km_end
         self.trail.choices = [(t.id, t.displayname) for t in Trail.query.order_by(Trail.displayname).all()]
 
+    def set_trail(self, trail_id):
+        self.trail.data = trail_id
+
     def validate_km_start(self, form):
         trail_id = self.trail.data
+        # print(f"Trail ID = {trail_id} in validation")
+        # print(f"km_start = {self.km_start.data} in validation")
         t = Trail.query.where(Trail.id==trail_id).one()
         if self.km_start.data > t.length or self.km_start.data < 0:
+            print('validation failed')
             raise ValidationError(f"The {t.displayname} has a length of {t.length} km, so this value must be between 0 and {t.length}")
 
     def validate_km_end(self, form):
         trail_id = self.trail.data
+        # print(f"Trail ID = {trail_id} in validation")
         t = Trail.query.where(Trail.id==trail_id).one()
         if self.km_end.data > t.length or self.km_end.data < 0:
+            print('validation failed')
             raise ValidationError(f"The {t.displayname} has a length of {t.length} km, so this value must be between 0 and {t.length}")

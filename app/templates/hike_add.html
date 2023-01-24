@@ -6,11 +6,11 @@
 
 <div class="row">
     <div class="col-md-4">
-        <form method="POST">
+        <form method="POST" action={{url_for("main.hike_add",displayname=trail.displayname)}}>
             <div>{{ form.timestamp.label }} {{form.timestamp}}</div>
             <div>{{ form.km_start.label }} {{ form.km_start}}</div>
             <div>{{ form.km_end.label }} {{ form.km_end}}</div>
-            <button type="submit">Submit</button>
+            <button type=" submit">Submit</button>
         </form>
     </div>
 </div>
@@ -19,7 +19,7 @@
     startfield = document.getElementById('km_start');
     endfield = document.getElementById('km_end');
     startfield.value = 0;
-    endfield.value = {{ trail.length }}
+    endfield.value = {{ trail.length }};
 </script>
 
 <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.js'></script>
@@ -122,13 +122,15 @@
                 let del_min_end = Math.min.apply(Math, delta_end);
                 let i_min_end = delta_end.indexOf(del_min_end);
                 let dcum_end = Math.round(10 * dcum[i_min_end]) / 10
-                document.getElementById('info').innerHTML = `Selected range ${dcum_start} km to ${dcum_end} km`;
-                data.geometry.coordinates = coords.slice(i_min_start, i_min_end)
-                map.getSource('hike').setData(data);
                 startfield = document.getElementById('km_start');
                 endfield = document.getElementById('km_end');
                 startfield.value = dcum_start;
                 endfield.value = dcum_end;
+                document.getElementById('info').innerHTML = `Selected range ${dcum_start} km to ${dcum_end} km`;
+                let i0 = Math.min(i_min_start, i_min_end)
+                let i1 = Math.max(i_min_start, i_min_end)
+                data.geometry.coordinates = coords.slice(i0, i1);
+                map.getSource('hike').setData(data);
             }
             startmarker.on('dragend', dragfunc);
             endmarker.on('dragend', dragfunc);
