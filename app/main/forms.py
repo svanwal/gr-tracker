@@ -1,6 +1,6 @@
 from flask import request
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, FloatField, DateField, SelectField
+from wtforms import StringField, SubmitField, TextAreaField, FloatField, SelectField, DecimalRangeField, DateField
 from flask_wtf.file import FileField, FileRequired
 from wtforms.validators import ValidationError, DataRequired, Length, NumberRange, InputRequired
 from flask_babel import _, lazy_gettext as _l
@@ -60,6 +60,7 @@ class EditTrailForm(FlaskForm):
 class HikeForm(FlaskForm):
     trail = SelectField('Trail', validators=[DataRequired()])
     timestamp = DateField('Date', validators=[DataRequired()])
+    # timestamp = DateTimeLocalField('Date', format='%m/%d/%y', validators=[DataRequired()])
     km_start = FloatField('Start km', validators=[InputRequired()])
     km_end = FloatField('End km', validators=[InputRequired()])
     submit = SubmitField('Submit')
