@@ -6,6 +6,7 @@ from wtforms.validators import ValidationError, DataRequired, Length, NumberRang
 from flask_babel import _, lazy_gettext as _l
 from app.models import User, Trail
 from datetime import datetime
+from pathlib import Path
 
 
 class EditProfileForm(FlaskForm):
@@ -28,6 +29,9 @@ class EditProfileForm(FlaskForm):
 class EmptyForm(FlaskForm):
     submit = SubmitField('Submit')
 
+    def __init__(self, text="Submit"):
+        self.submit = text
+
 
 class PostForm(FlaskForm):
     post = TextAreaField(_l('Say something'), validators=[DataRequired()])
@@ -45,16 +49,23 @@ class SearchForm(FlaskForm):
         super(SearchForm, self).__init__(*args, **kwargs)
 
 
-class EditTrailForm(FlaskForm):
-    displayname = StringField('Display name', validators=[DataRequired()])
+class TrailForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired()])
+    dispname = StringField('Display name', validators=[DataRequired()])
     fullname = StringField('Full name', validators=[DataRequired()])
-    gpx = FileField('File', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
-    def __init__(self, original_displayname="", original_fullname="", *args, **kwargs):
-        super(EditTrailForm, self).__init__(*args, **kwargs)
-        self.original_displayname = original_displayname
-        self.original_fullname = original_fullname
+    def fill_from_trail(self, trail):
+        self.name.data = trail.name
+        self.dispname.data = trail.dispname
+        self.fullname.data = trail.fullname
+
+    def validate_name(self, form):
+        path = Path(f"app/data/{self.name.data}.csv")
+        print(f"Checking if {path} exists")
+        if not path.is_file():
+            raise ValidationError(f"Coordinate file not found. Please make sure {path} exists before adding this trail.")
+
         
 
 class HikeForm(FlaskForm):
@@ -69,24 +80,19 @@ class HikeForm(FlaskForm):
         self.og_timestamp = og_timestamp
         self.og_km_start = og_km_start
         self.og_km_end = og_km_end
-        self.trail.choices = [(t.id, t.displayname) for t in Trail.query.order_by(Trail.displayname).all()]
+        self.trail.choices = [(t.id, t.dispname) for t in Trail.query.order_by(Trail.name).all()]
 
     def set_trail(self, trail_id):
         self.trail.data = trail_id
 
     def validate_km_start(self, form):
         trail_id = self.trail.data
-        # print(f"Trail ID = {trail_id} in validation")
-        # print(f"km_start = {self.km_start.data} in validation")
         t = Trail.query.where(Trail.id==trail_id).one()
         if self.km_start.data > t.length or self.km_start.data < 0:
-            print('validation failed')
             raise ValidationError(f"The {t.displayname} has a length of {t.length} km, so this value must be between 0 and {t.length}")
 
     def validate_km_end(self, form):
         trail_id = self.trail.data
-        # print(f"Trail ID = {trail_id} in validation")
         t = Trail.query.where(Trail.id==trail_id).one()
         if self.km_end.data > t.length or self.km_end.data < 0:
-            print('validation failed')
             raise ValidationError(f"The {t.displayname} has a length of {t.length} km, so this value must be between 0 and {t.length}")

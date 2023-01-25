@@ -26,10 +26,10 @@
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
                 <li><a href="{{ url_for('main.index') }}">Home</a></li>
-                <li><a href="{{ url_for('main.trail') }}">Trails</a></li>
-                <li><a href="{{ url_for('main.hike') }}">All hikes</a></li>
+                <li><a href="{{ url_for('main.show_all_trails') }}">Trails</a></li>
+                <!-- <li><a href="{{ url_for('main.hike') }}">All hikes</a></li>
                 <li><a href="{{ url_for('main.myhikes') }}">My hikes</a></li>
-                <li><a href="{{ url_for('main.mytrails') }}">My trails</a></li>
+                <li><a href="{{ url_for('main.mytrails') }}">My trails</a></li> -->
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_anonymous %}

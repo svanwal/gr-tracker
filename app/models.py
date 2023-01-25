@@ -9,6 +9,7 @@ from app import db, login
 from app.search import add_to_index, remove_from_index, query_index
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.types import PickleType
+import csv
 
 
 class SearchableMixin(object):
@@ -143,22 +144,50 @@ class Post(SearchableMixin, db.Model):
 
 class Trail(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    displayname = db.Column(db.String(30), unique=True, nullable=False)
-    fullname = db.Column(db.String(150), unique=True, nullable=False)
+    name = db.Column(db.String(30), unique=True, nullable=False)
+    dispname = db.Column(db.String(30), unique=True, nullable=False)
+    fullname = db.Column(db.String(150), nullable=False)
     length = db.Column(db.Float, nullable=False)
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     hikes = db.relationship('Hike', backref='path', lazy='dynamic')
 
+    def __init__(self, name, dispname, fullname):
+        self.name = name
+        self.dispname = dispname
+        self.fullname = fullname
+        self.calculate_length()
+        
+    def calculate_length(self):
+        geometry = self.get_geometry()
+        length = geometry['cumulative_distances'][-1]
+        self.length = round(10*length)/10
+        
     def __repr__(self):
-        return f"<Trail {self.displayname}: {self.fullname} ({self.length} km)>"
+        return f"<Trail {self.name}: {self.fullname} (spans {self.length} km)>"
 
     @property
-    def filename_raw(self):
-        return f"app/data/{self.displayname.lower()}_raw.csv"
+    def filename(self):
+        return f"app/data/{self.name.lower()}.csv"
 
-    @property
-    def filename_processed(self):
-        return f"app/data/{self.displayname.lower()}_processed.csv"
+    def fill_from_form(self, form):
+        self.name = form.name.data
+        self.dispname = form.dispname.data
+        self.fullname = form.fullname.data
+        self.calculate_length()
+
+    def get_geometry(self):
+        with open(self.filename, newline='') as file:
+            reader = csv.reader(file)
+            next(reader, None)
+            data = list(reader)
+        coordinates = [[float(row[1]),float(row[0])] for row in data]
+        cumulative_distances = [float(row[3]) for row in data]
+        center_coordinate = coordinates[int(len(coordinates)/2)]
+        return {
+            'coordinates': coordinates,
+            'cumulative_distances': cumulative_distances,
+            'center_coordinate': center_coordinate,
+        }
 
 
 class Hike(db.Model):

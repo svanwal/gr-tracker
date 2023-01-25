@@ -2,35 +2,24 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-<h1>List of hiking trails</h1>
-<table class="table table-hover">
-    <tr>
-        <td>Display name</td>
-        <td>Full name</td>
-        <td>Length [km]</td>
-        <td>Add hike</td>
-    </tr>
-    {% for trail in trails %}
-    <tr>
-        <td>
-            <a href="{{ url_for('main.trail_detail', displayname=trail.displayname) }}">
-                {{trail.displayname}}
-            </a>
-        </td>
-        <td>{{trail.fullname}}</td>
-        <td>{{trail.length}} km</td>
-        <td>
-            <a href="{{ url_for('main.hike_add', displayname=trail.displayname) }}">
-                Add hike on {{trail.displayname}}
-            </a>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+<h1>Trail details: {{trail.dispname}} ({{trail.fullname}})</h1>
 
-<h1>Add new trail</h1>
-{% if form %}
-{{ wtf.quick_form(form) }}
-{% endif %}
+<div class="row">
+    <div class="col-md-4">
+        <form style="display:inline;" method="GET" action={{url_for("main.show_all_trails", name=trail.name)}}>
+            <button class="btn btn-primary" type="submit">Back to all trails</button>
+        </form>
+        <form style="display:inline;" method="GET" action={{url_for("main.edit_trail", name=trail.name)}}>
+            <button class="btn btn-warning" type="submit">Edit</button>
+        </form>
+        <form style="display:inline;" method="POST" action={{url_for("main.delete_trail", name=trail.name)}}>
+            <button class="btn btn-danger" type="submit">Delete</button>
+        </form>
+    </div>
+</div>
+
+<p>This trail has a total length of {{trail.length}} km.</p>
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.js'></script>
+{% include "_map.html" %}
 
 {% endblock %}

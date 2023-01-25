@@ -1,0 +1,75 @@
+<div class="container">
+    <div id='map' style='width: 100%; height: 400px;'></div>
+    <script>
+        // Process input variables
+        const coordinates = JSON.parse('{{ raw_coordinates | tojson }}');
+        const center_coordinate = JSON.parse('{{ raw_center_coordinate | tojson }}');
+        const cumulative_distances = JSON.parse('{{ raw_cumulative_distances | tojson }}');
+
+        // Initialize map
+        mapboxgl.accessToken = 'pk.eyJ1IjoianNvbWEiLCJhIjoibFJmYl9JWSJ9.AUm8d76cbOvVEn2mMeG_ZA';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/outdoors-v9',
+            center: center_coordinate,
+            zoom: 7,
+        });
+
+        // Initialize markers and popups
+        const marker = new mapboxgl.Marker({
+            color: '#F84C4C' // color it red
+        });
+        const popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            anchor: 'left',
+            offset: 30,
+        });
+
+        // Draw trail
+        map.on('load', function () {
+            map.addSource('route', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': coordinates
+                    }
+                }
+            });
+            map.addLayer({
+                'id': 'route',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#000000',
+                    'line-width': 3
+                }
+            });
+        })
+
+        // Snap marker to trail as mouse moves
+        map.on('mousemove', (mouse) => {
+            let mouse_to_coordinates = [];
+            for (let i = 0; i < coordinates.length; i++) {
+                let delta_longitude = coordinates[i][0] - mouse.lngLat.lng
+                let delta_latitude = coordinates[i][1] - mouse.lngLat.lat
+                let delta = delta_longitude * delta_longitude + delta_latitude * delta_latitude
+                mouse_to_coordinates.push(delta)
+            }
+            let mouse_to_trail = Math.min.apply(Math, mouse_to_coordinates);
+            let index_nearest_coord = mouse_to_coordinates.indexOf(mouse_to_trail);
+            let nearest_cumulative_distance = Math.round(10 * cumulative_distances[index_nearest_coord]) / 10
+            marker.setLngLat(coordinates[index_nearest_coord]);
+            marker.addTo(map);
+            let popup_text = `${nearest_cumulative_distance} km`
+            popup.setLngLat(coordinates[index_nearest_coord]).setHTML(popup_text).addTo(map);
+        });
+    </script>
+</div>
