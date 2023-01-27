@@ -1,34 +1,34 @@
-{% extends "base.html" %}
-{% import 'bootstrap/wtf.html' as wtf %}
-
-{% block app_content %}
-<h1>Hikes on trail {{trail.displayname}} by user {{username}}</h1>
-<p>Display name: {{trail.displayname}}</p>
-<p>Full name: {{trail.fullname}}</p>
-<p>Length: {{trail.length}} km</p>
-
 <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.js'></script>
-
 <div class="container">
-    <div id='map' style='width: 1000px; height: 450px;'></div>
-    <pre id="info"></pre>
-
+    <div id='map' style='width: 100%; height: 400px;'></div>
     <script>
-        // display
+        // Process input variables
+        const coordinates = JSON.parse('{{ raw_coordinates | tojson }}');
+        const center_coordinate = JSON.parse('{{ raw_center_coordinate | tojson }}');
+        const cumulative_distances = JSON.parse('{{ raw_cumulative_distances | tojson }}');
+        const hikes_coordinates = JSON.parse('{{ raw_hike_coordinates | tojson }}');
+
+        // Initialize map
         mapboxgl.accessToken = 'pk.eyJ1IjoianNvbWEiLCJhIjoibFJmYl9JWSJ9.AUm8d76cbOvVEn2mMeG_ZA';
-        const coords = JSON.parse('{{ coords_raw | tojson }}');
-        const center = JSON.parse('{{ center_raw | tojson }}');
-        const dcum = JSON.parse('{{ dcum_raw | tojson }}');
-        const test = JSON.parse('{{ raw_hikes | tojson }}');
         var map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/outdoors-v9',
-            center: center,
+            center: center_coordinate,
             zoom: 7,
         });
+
+        // Initialize markers and popups
         const marker = new mapboxgl.Marker({
             color: '#F84C4C' // color it red
         });
+        const popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            anchor: 'left',
+            offset: 30,
+        });
+
+        // Draw trail and hike
         map.on('load', function () {
             map.addSource('route', {
                 'type': 'geojson',
@@ -37,7 +37,7 @@
                     'properties': {},
                     'geometry': {
                         'type': 'LineString',
-                        'coordinates': coords
+                        'coordinates': coordinates
                     }
                 }
             });
@@ -51,12 +51,12 @@
                 },
                 'paint': {
                     'line-color': '#000000',
-                    'line-width': 3
+                    'line-width': 5
                 }
             });
             // hikes
-            for (let i = 0; i < test.length; i++) {
-                const hike = test[i];
+            for (let i = 0; i < hikes_coordinates.length; i++) {
+                const hike = hikes_coordinates[i];
                 map.addSource(`route${i}`, {
                     'type': 'geojson',
                     'data': {
@@ -78,28 +78,28 @@
                     },
                     'paint': {
                         'line-color': '#00FF00',
-                        'line-width': 5
+                        'line-width': 2
                     }
                 });
             }
         })
-        // events
-        map.on('mousemove', (e) => {
-            let delta = [];
-            for (let i = 0; i < coords.length; i++) {
-                let del_x = coords[i][0] - e.lngLat.lng
-                let del_y = coords[i][1] - e.lngLat.lat
-                let del = del_x * del_x + del_y * del_y
-                delta.push(del)
+
+        // Snap marker to trail as mouse moves
+        map.on('mousemove', (mouse) => {
+            let mouse_to_coordinates = [];
+            for (let i = 0; i < coordinates.length; i++) {
+                let delta_longitude = coordinates[i][0] - mouse.lngLat.lng
+                let delta_latitude = coordinates[i][1] - mouse.lngLat.lat
+                let delta = delta_longitude * delta_longitude + delta_latitude * delta_latitude
+                mouse_to_coordinates.push(delta)
             }
-            let del_min = Math.min.apply(Math, delta);
-            let i_min = delta.indexOf(del_min);
-            let current_dcum = Math.round(10 * dcum[i_min]) / 10
-            document.getElementById('info').innerHTML = "Cursor is at " + current_dcum + " km"
-            marker.setLngLat([coords[i_min][0], coords[i_min][1]]);
+            let mouse_to_trail = Math.min.apply(Math, mouse_to_coordinates);
+            let index_nearest_coord = mouse_to_coordinates.indexOf(mouse_to_trail);
+            let nearest_cumulative_distance = Math.round(10 * cumulative_distances[index_nearest_coord]) / 10
+            marker.setLngLat(coordinates[index_nearest_coord]);
             marker.addTo(map);
+            let popup_text = `${nearest_cumulative_distance} km`
+            popup.setLngLat(coordinates[index_nearest_coord]).setHTML(popup_text).addTo(map);
         });
     </script>
 </div>
-
-{% endblock %}

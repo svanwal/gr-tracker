@@ -2,32 +2,28 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-<h1>List of all hikes</h1>
+<h1>Hike details</h1>
+<p>
+    Hiker <i>{{hike.walker.username}}</i> completed this hike along the {{trail.dispname}} trail, on {{hike.timestamp}}.
+</p>
+<p>
+    They hiked from km {{hike.km_start}} to km {{hike.km_end}}, covering a total distance of {{hike.distance}} km.
+</p>
 
-<table class="table table-hover">
-    <tr>
-        <td>User</td>
-        <td>Date</td>
-        <td>Trail</td>
-        <td>Distance</td>
-        <td>Start km</td>
-        <td>End km</td>
-        <td></td>
-    </tr>
-    {% for hike in hikes %}
-    <tr>
-        <td>{{hike.walker.username}}</td>
-        <td>{{hike.timestamp}}</td>
-        <td>{{hike.path.displayname}}</td>
-        <td>{{hike.d}}</td>
-        <td>{{hike.km_start}}</td>
-        <td>{{hike.km_end}}</td>
-        <td>
-            <a href="{{ url_for('main.hike_detail', hike_id=hike.id) }}">
-                View hike
-            </a>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+<div class="row">
+    <div class="col-md-4">
+        <form style="display:inline;" method="GET" action={{url_for("hikes.show_all_hikes")}}>
+            <button class="btn btn-primary" type="submit">Back to all hikes</button>
+        </form>
+        <form style="display:inline;" method="GET" action={{url_for("hikes.edit_hike", id=hike.id)}}>
+            <button class="btn btn-warning" type="submit">Edit</button>
+        </form>
+        <form style="display:inline;" method="POST" action={{url_for("hikes.delete_hike", id=hike.id)}}>
+            <button class="btn btn-danger" type="submit">Delete</button>
+        </form>
+    </div>
+</div>
+
+{% include "_map_hike.html" %}
+
 {% endblock %}

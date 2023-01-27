@@ -2,7 +2,9 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-<h1>Trail details: {{trail.dispname}} ({{trail.fullname}})</h1>
+<h1>Trail details</h1>
+<h2>{{trail.dispname}} ({{trail.fullname}})</h2>
+<p>This trail has a total length of {{trail.length}} km.</p>
 
 <div class="row">
     <div class="col-md-4">
@@ -18,8 +20,6 @@
     </div>
 </div>
 
-<p>This trail has a total length of {{trail.length}} km.</p>
-<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.js'></script>
-{% include "_map.html" %}
+{% include "_map_plain.html" %}
 
 {% endblock %}

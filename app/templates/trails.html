@@ -2,7 +2,7 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-<h1>List of hiking trails</h1>
+<h1>Available hiking trails</h1>
 
 <table class="table table-hover">
     <tr>
@@ -23,7 +23,7 @@
         <td>{{trail.fullname}}</td>
         <td>{{trail.length}} km</td>
         <td>
-            <form method="GET" action={{url_for("trails.show_single_trail", name=trail.name)}}>
+            <form method="GET" action={{url_for("hikes.add_hike", name=trail.name)}}>
                 <button class="btn btn-info btn-sm" type="submit">
                     Add hike on {{trail.dispname}}
                 </button>

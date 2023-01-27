@@ -189,15 +189,32 @@ class Trail(db.Model):
             'center_coordinate': center_coordinate,
         }
 
+    def get_coordinate_range(self, km_start, km_end):
+        geometry = self.get_geometry()
+        dcum_start = min(geometry['cumulative_distances'], key=lambda x:abs(x-km_start))
+        i_start = geometry['cumulative_distances'].index(dcum_start)
+        dcum_end = min(geometry['cumulative_distances'], key=lambda x:abs(x-km_end))
+        i_end = geometry['cumulative_distances'].index(dcum_end)
+        return geometry['coordinates'][i_start:i_end]
+
 
 class Hike(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     trail_id = db.Column(db.Integer, db.ForeignKey('trail.id'))
-    timestamp = db.Column(db.Date, index=True, default=datetime.utcnow)
+    timestamp = db.Column(db.Date, default=datetime.utcnow)
     km_start = db.Column(db.Float, nullable=False)
     km_end = db.Column(db.Float, nullable=False)
-    d = db.Column(db.Float)
+    distance = db.Column(db.Float, nullable=False)
     
     def __repr__(self):
         return f"<Hike by user {self.user_id} on trail {self.trail_id}, km {self.km_start} to {self.km_end}>"
+
+    def fill_from_form(self, form):
+        self.timestamp = form.timestamp.data
+        self.km_start = form.km_start.data
+        self.km_end = form.km_end.data
+        self.update_distance()
+
+    def update_distance(self):
+        self.distance = round(abs(self.km_start - self.km_end),1)

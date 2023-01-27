@@ -1,0 +1,172 @@
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.js'></script>
+<div class="container">
+    <div id='map' style='width: 600px; height: 400px;'></div>
+    <pre id="info"></pre>
+
+    <script>
+        // Initialize map
+        mapboxgl.accessToken = 'pk.eyJ1IjoianNvbWEiLCJhIjoibFJmYl9JWSJ9.AUm8d76cbOvVEn2mMeG_ZA';
+        const coordinates = JSON.parse('{{ raw_coordinates | tojson }}');
+        const center_coordinate = JSON.parse('{{ raw_center_coordinate | tojson }}');
+        const cumulative_distances = JSON.parse('{{ raw_cumulative_distances | tojson }}');
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/outdoors-v9',
+            center: center_coordinate,
+            zoom: 7,
+        });
+
+        // Slice route according to form fields
+        // document.getElementById('info').innerHTML = 'initialized'
+        startfield = document.getElementById('km_start');
+        endfield = document.getElementById('km_end');
+        let d_start = startfield.value;
+        let delta_start = [];
+        for (let i = 0; i < cumulative_distances.length; i++) {
+            delta_start.push(Math.abs(cumulative_distances[i] - d_start));
+        }
+        let delta_min = Math.min.apply(Math, delta_start);
+        let i0 = delta_start.indexOf(delta_min);
+        let d_end = endfield.value;
+        let delta_end = [];
+        for (let i = 0; i < cumulative_distances.length; i++) {
+            delta_end.push(Math.abs(cumulative_distances[i] - d_end));
+        }
+        let delta_max = Math.min.apply(Math, delta_end);
+        let i1 = delta_end.indexOf(delta_max);
+
+
+        //  i0 = 0;
+        // let i1 = 100;
+
+        let hike_data = {
+            'type': 'Feature',
+            'properties': {},
+            'geometry': {
+                'type': 'LineString',
+                'coordinates': coordinates.slice(i0, i1),
+            }
+        };
+
+        // Markers and popups
+        const popup_start = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            anchor: 'right',
+            offset: 15,
+        });
+        const popup_end = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            anchor: 'left',
+            offset: 15,
+        });
+        const marker_start = new mapboxgl.Marker({
+            draggable: true,
+            color: '#ff0000',
+        })
+            .setLngLat(coordinates[i0])
+            .addTo(map);
+        const marker_end = new mapboxgl.Marker({
+            draggable: true,
+            color: '#00ff00',
+        })
+            .setLngLat(coordinates[i1])
+            .addTo(map);
+
+        // Drawing route
+        map.on('load', function () {
+            map.addSource('route', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'properties': {},
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': coordinates
+                    }
+                }
+            });
+            map.addLayer({
+                'id': 'route',
+                'type': 'line',
+                'source': 'route',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#000000',
+                    'line-width': 5
+                }
+            });
+
+            map.addSource('hike', {
+                'type': 'geojson',
+                'data': hike_data,
+            });
+            map.addLayer({
+                'id': 'hike',
+                'type': 'line',
+                'source': 'hike',
+                'layout': {
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                },
+                'paint': {
+                    'line-color': '#00ff00',
+                    'line-width': 2
+                }
+            });
+
+            function point2line(longitude, latitude, line) {
+                let distances = [];
+                for (let i = 0; i < line.length; i++) {
+                    let delta_longitude = line[i][0] - longitude
+                    let delta_latitude = line[i][1] - latitude
+                    let delta = delta_longitude * delta_longitude + delta_latitude * delta_latitude
+                    distances.push(delta)
+                }
+                let distance_min = Math.min.apply(Math, distances);
+                let index_min = distances.indexOf(distance_min);
+                return {
+                    distances: distances,
+                    index_min: index_min,
+                    distance_min: distance_min,
+                }
+            };
+
+            function roundkm(value) {
+                return Math.round(10 * value) / 10
+            };
+
+            // Event handlers
+            function drag_marker() {
+                // Calculations for start marker
+                const latlon_start = marker_start.getLngLat();
+                let proximity_start = point2line(latlon_start.lng, latlon_start.lat, coordinates)
+                let dcum_start = roundkm(cumulative_distances[proximity_start.index_min])
+                // Calculations for end marker
+                const latlon_end = marker_end.getLngLat();
+                let proximity_end = point2line(latlon_end.lng, latlon_end.lat, coordinates)
+                let dcum_end = roundkm(cumulative_distances[proximity_end.index_min])
+                // Set form values
+                document.getElementById('km_start').value = dcum_start;
+                document.getElementById('km_end').value = dcum_end;
+                // Set marker properties
+                let highlight_start_index = Math.min(proximity_start.index_min, proximity_end.index_min)
+                let highlight_end_index = Math.max(proximity_start.index_min, proximity_end.index_min)
+                hike_data.geometry.coordinates = coordinates.slice(highlight_start_index, highlight_end_index);
+                map.getSource('hike').setData(hike_data);
+                // Set popup properties
+                let text_start = `${dcum_start} km`
+                popup_start.setLngLat(latlon_start).setHTML(text_start).addTo(map);
+                let text_end = `${dcum_end} km`
+                popup_end.setLngLat(latlon_end).setHTML(text_end).addTo(map);
+            }
+            marker_start.on('dragend', drag_marker);
+            marker_end.on('dragend', drag_marker);
+
+        })
+    </script>
+</div>

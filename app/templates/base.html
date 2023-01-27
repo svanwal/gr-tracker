@@ -27,9 +27,10 @@
             <ul class="nav navbar-nav">
                 <li><a href="{{ url_for('main.index') }}">Home</a></li>
                 <li><a href="{{ url_for('trails.show_all_trails') }}">Trails</a></li>
-                <!-- <li><a href="{{ url_for('main.hike') }}">All hikes</a></li>
-                <li><a href="{{ url_for('main.myhikes') }}">My hikes</a></li>
-                <li><a href="{{ url_for('main.mytrails') }}">My trails</a></li> -->
+                <li><a href="{{ url_for('hikes.show_all_hikes') }}">All hikes</a></li>
+                <li><a href="{{ url_for('hikes.show_user_hikes', username=current_user.username) }}">My hikes</a></li>
+                <li><a href="{{ url_for('trails.show_user_trails', username=current_user.username) }}">My trails</a>
+                </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_anonymous %}

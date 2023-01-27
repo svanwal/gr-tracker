@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+<h1>Trails explored by <i>{{user.username}}</i></h1>
+
+<table class="table table-hover">
+    <tr>
+        <td>Name</td>
+        <td>Full name</td>
+        <td>Length</td>
+        <td>Distance completed</td>
+        <td>Percentage completed</td>
+        <td></td>
+    </tr>
+    {% for trail in trails %}
+    <tr>
+        <td>{{trail.dispname}}</td>
+        <td>{{trail.fullname}}</td>
+        <td>{{trail.length}} km</td>
+        <td>{{stats.total_distances[trail.name]}} km</td>
+        <td>{{stats.percentages[trail.name]}}%</td>
+        <td>
+            <form method="GET"
+                action={{url_for("hikes.show_trail_hikes", trailname=trail.name, username=user.username)}}>
+                <button class="btn btn-info btn-sm" type="submit">
+                    View on map
+                </button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

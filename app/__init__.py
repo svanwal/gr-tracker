@@ -49,6 +49,9 @@ def create_app(config_class=Config):
     from app.trails import bp as trails_bp
     app.register_blueprint(trails_bp)
 
+    from app.hikes import bp as hikes_bp
+    app.register_blueprint(hikes_bp)
+
     if not app.debug and not app.testing:
         if app.config['MAIL_SERVER']:
             auth = None
