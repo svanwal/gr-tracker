@@ -95,7 +95,7 @@ def delete_trail(name):
 @bp.route('/trails/user/<username>', methods=['GET'])
 @login_required
 def show_user_trails(username):
-    user = User.query.where(User.username==username).one_or_404()
+    user = User.query.where(User.username==username).one()
     trails = Trail.query.join(Hike, Hike.trail_id == Trail.id, isouter=True).where(Hike.user_id==user.id).all()
     hikes = Hike.query.where(Hike.user_id==user.id).all()
     stats = calculate_stats(hikes)
