@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 820987ccf898
+Revision ID: 1d259f06c2eb
 Revises: 
-Create Date: 2023-01-24 17:45:55.589645
+Create Date: 2023-01-27 11:47:19.649267
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '820987ccf898'
+revision = '1d259f06c2eb'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -55,14 +55,11 @@ def upgrade():
     sa.Column('timestamp', sa.Date(), nullable=True),
     sa.Column('km_start', sa.Float(), nullable=False),
     sa.Column('km_end', sa.Float(), nullable=False),
-    sa.Column('d', sa.Float(), nullable=True),
+    sa.Column('distance', sa.Float(), nullable=False),
     sa.ForeignKeyConstraint(['trail_id'], ['trail.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    with op.batch_alter_table('hike', schema=None) as batch_op:
-        batch_op.create_index(batch_op.f('ix_hike_timestamp'), ['timestamp'], unique=False)
-
     op.create_table('post',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('body', sa.String(length=140), nullable=True),
@@ -84,9 +81,6 @@ def downgrade():
         batch_op.drop_index(batch_op.f('ix_post_timestamp'))
 
     op.drop_table('post')
-    with op.batch_alter_table('hike', schema=None) as batch_op:
-        batch_op.drop_index(batch_op.f('ix_hike_timestamp'))
-
     op.drop_table('hike')
     op.drop_table('followers')
     with op.batch_alter_table('user', schema=None) as batch_op:
