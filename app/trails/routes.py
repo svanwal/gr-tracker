@@ -31,7 +31,7 @@ def show_all_trails():
 @bp.route('/trails/new', methods=['GET', 'POST'])
 @login_required
 def add_trail():
-    tm = TrailManager(session=db.session,actor=current_user)
+    tm = TrailManager(session=db.session,user=current_user)
     form = TrailForm()
     if form.validate_on_submit():
         name = form.name.data
@@ -52,7 +52,7 @@ def add_trail():
 # Show a single trail
 @bp.route('/trails/<name>', methods=['GET'])
 def show_single_trail(name):
-    tm = TrailManager(session=db.session,actor=current_user)
+    tm = TrailManager(session=db.session,user=current_user)
     trail = tm.list_trails(name=name)
     geometry = trail.get_geometry()
     return render_template(
@@ -74,7 +74,7 @@ def edit_trail(name):
         flash(f"You are not authorized to perform that action.")
         return redirect(url_for('trails.show_all_trails'))
 
-    tm = TrailManager(session=db.session,actor=current_user)
+    tm = TrailManager(session=db.session,user=current_user)
     trail = tm.list_trails(name=name)
     form = TrailForm()
     if not trail:
@@ -109,7 +109,7 @@ def delete_trail(name):
         flash(f"You are not authorized to perform that action.")
         return redirect(url_for('trails.show_all_trails'))
 
-    tm = TrailManager(session=db.session,actor=current_user)
+    tm = TrailManager(session=db.session,user=current_user)
     tm.delete_trail(name=name)
     flash(f"Trail {trail.dispname} has been deleted.")
     return redirect(url_for('main.show_all_trails'))
@@ -118,7 +118,7 @@ def delete_trail(name):
 # Show the trails on which a user has hiked
 @bp.route('/trails/user/<username>', methods=['GET'])
 def show_user_trails(username):
-    tm = TrailManager(session=db.session,actor=current_user)
+    tm = TrailManager(session=db.session,user=current_user)
     us = tm.get_user_statistics(username=username)
     return render_template(
         'trails_user.html',

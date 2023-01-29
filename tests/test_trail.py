@@ -6,7 +6,7 @@ import pytest
 def test_admin_user_can_add_existing_trail(dummy_db,admin_user,dummy_existing_trail):
     dummy_db.session.add(admin_user)
     dummy_db.session.commit()
-    tm = TrailManager(session=dummy_db.session,actor=admin_user)
+    tm = TrailManager(session=dummy_db.session,user=admin_user)
     trail = tm.add_trail(**dummy_existing_trail)
     assert trail
 
@@ -14,7 +14,7 @@ def test_admin_user_can_add_existing_trail(dummy_db,admin_user,dummy_existing_tr
 def test_regular_user_cannot_add_existing_trail(dummy_db,regular_user,dummy_existing_trail):
     dummy_db.session.add(regular_user)
     dummy_db.session.commit()
-    tm = TrailManager(session=dummy_db.session,actor=regular_user)
+    tm = TrailManager(session=dummy_db.session,user=regular_user)
     with pytest.raises(AuthorizationException):
         trail = tm.add_trail(**dummy_existing_trail)
 
@@ -22,7 +22,7 @@ def test_regular_user_cannot_add_existing_trail(dummy_db,regular_user,dummy_exis
 def test_admin_user_cannot_add_nonexisting_trail(dummy_db,admin_user,dummy_nonexisting_trail):
     dummy_db.session.add(admin_user)
     dummy_db.session.commit()
-    tm = TrailManager(session=dummy_db.session,actor=admin_user)
+    tm = TrailManager(session=dummy_db.session,user=admin_user)
     with pytest.raises(FileMissingException):
         trail = tm.add_trail(**dummy_nonexisting_trail)
 
@@ -30,7 +30,7 @@ def test_admin_user_cannot_add_nonexisting_trail(dummy_db,admin_user,dummy_nonex
 def test_admin_user_can_delete_trail(dummy_db,admin_user,dummy_existing_trail):
     dummy_db.session.add(admin_user)
     dummy_db.session.commit()
-    tm = TrailManager(session=dummy_db.session,actor=admin_user)
+    tm = TrailManager(session=dummy_db.session,user=admin_user)
     trail = tm.add_trail(**dummy_existing_trail)
     assert trail
     tm.delete_trail(name=trail.name)
@@ -41,10 +41,10 @@ def test_admin_user_can_delete_trail(dummy_db,admin_user,dummy_existing_trail):
 def test_regular_user_cannot_delete_trail(dummy_db,admin_user,regular_user,dummy_existing_trail):
     dummy_db.session.add(admin_user)
     dummy_db.session.commit()
-    tm_admin = TrailManager(session=dummy_db.session,actor=admin_user)
+    tm_admin = TrailManager(session=dummy_db.session,user=admin_user)
     trail = tm_admin.add_trail(**dummy_existing_trail)
     assert trail
-    tm_regular = TrailManager(session=dummy_db.session,actor=regular_user)
+    tm_regular = TrailManager(session=dummy_db.session,user=regular_user)
     with pytest.raises(AuthorizationException):
         tm_regular.delete_trail(name=trail.name)
 
@@ -52,7 +52,7 @@ def test_regular_user_cannot_delete_trail(dummy_db,admin_user,regular_user,dummy
 def test_admin_user_can_add_existing_trail(dummy_db,admin_user,dummy_existing_trail):
     dummy_db.session.add(admin_user)
     dummy_db.session.commit()
-    tm = TrailManager(session=dummy_db.session,actor=admin_user)
+    tm = TrailManager(session=dummy_db.session,user=admin_user)
     trail = tm.add_trail(**dummy_existing_trail)
     assert trail
 
@@ -60,7 +60,7 @@ def test_admin_user_can_add_existing_trail(dummy_db,admin_user,dummy_existing_tr
 def test_admin_user_can_edit_trail(dummy_db,admin_user,dummy_existing_trail):
     dummy_db.session.add(admin_user)
     dummy_db.session.commit()
-    tm = TrailManager(session=dummy_db.session,actor=admin_user)
+    tm = TrailManager(session=dummy_db.session,user=admin_user)
     trail = tm.add_trail(**dummy_existing_trail)
     assert trail
     tm.edit_trail(id=trail.id,new_dispname="new_dispname")
@@ -71,7 +71,7 @@ def test_admin_user_can_edit_trail(dummy_db,admin_user,dummy_existing_trail):
 def test_admin_user_cannot_edit_trail_with_missing_file(dummy_db,admin_user,dummy_existing_trail):
     dummy_db.session.add(admin_user)
     dummy_db.session.commit()
-    tm = TrailManager(session=dummy_db.session,actor=admin_user)
+    tm = TrailManager(session=dummy_db.session,user=admin_user)
     trail = tm.add_trail(**dummy_existing_trail)
     assert trail
     with pytest.raises(FileMissingException):
@@ -81,10 +81,10 @@ def test_admin_user_cannot_edit_trail_with_missing_file(dummy_db,admin_user,dumm
 def test_regular_user_cannot_edit_trail(dummy_db,admin_user,regular_user,dummy_existing_trail):
     dummy_db.session.add(admin_user)
     dummy_db.session.commit()
-    tm_admin = TrailManager(session=dummy_db.session,actor=admin_user)
+    tm_admin = TrailManager(session=dummy_db.session,user=admin_user)
     trail = tm_admin.add_trail(**dummy_existing_trail)
     assert trail
-    tm_regular = TrailManager(session=dummy_db.session,actor=regular_user)
+    tm_regular = TrailManager(session=dummy_db.session,user=regular_user)
     with pytest.raises(AuthorizationException):
         tm_regular.edit_trail(id=trail.id,new_dispname="new_dispname")
 
@@ -92,9 +92,9 @@ def test_regular_user_cannot_edit_trail(dummy_db,admin_user,regular_user,dummy_e
 def test_anyone_can_list_trails(dummy_db,admin_user,anonymous_user,dummy_existing_trail):
     dummy_db.session.add(admin_user)
     dummy_db.session.commit()
-    tm_admin = TrailManager(session=dummy_db.session,actor=admin_user)
+    tm_admin = TrailManager(session=dummy_db.session,user=admin_user)
     trail = tm_admin.add_trail(**dummy_existing_trail)
-    tm_anonymous = TrailManager(session=dummy_db.session,actor=anonymous_user)
+    tm_anonymous = TrailManager(session=dummy_db.session,user=anonymous_user)
     trails = tm_anonymous.list_trails()
     assert len(trails) == 1
 
@@ -102,9 +102,9 @@ def test_anyone_can_list_trails(dummy_db,admin_user,anonymous_user,dummy_existin
 def test_anyone_can_list_single_trail(dummy_db,admin_user,anonymous_user,dummy_existing_trail):
     dummy_db.session.add(admin_user)
     dummy_db.session.commit()
-    tm_admin = TrailManager(session=dummy_db.session,actor=admin_user)
+    tm_admin = TrailManager(session=dummy_db.session,user=admin_user)
     trail = tm_admin.add_trail(**dummy_existing_trail)
-    tm_anonymous = TrailManager(session=dummy_db.session,actor=anonymous_user)
+    tm_anonymous = TrailManager(session=dummy_db.session,user=anonymous_user)
     queried_trail = tm_anonymous.list_trails(name=trail.name)
     assert queried_trail.name == trail.name
 
@@ -112,8 +112,8 @@ def test_anyone_can_list_single_trail(dummy_db,admin_user,anonymous_user,dummy_e
 def test_listing_missing_trail_returns_none(dummy_db,admin_user,anonymous_user,dummy_existing_trail):
     dummy_db.session.add(admin_user)
     dummy_db.session.commit()
-    tm_admin = TrailManager(session=dummy_db.session,actor=admin_user)
+    tm_admin = TrailManager(session=dummy_db.session,user=admin_user)
     trail = tm_admin.add_trail(**dummy_existing_trail)
-    tm_anonymous = TrailManager(session=dummy_db.session,actor=anonymous_user)
+    tm_anonymous = TrailManager(session=dummy_db.session,user=anonymous_user)
     queried_trail = tm_anonymous.list_trails(name="nonexistingtrail")
     assert not queried_trail

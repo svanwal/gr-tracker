@@ -65,3 +65,6 @@ def calculate_cumulative_distances(coordinates):
         # print(f"old dcum = {previous_cumulative_distance}, new d={distance_between_coordinates}, new dcum={current_cumulative_distance}")
         cumulative_distances.append(current_cumulative_distance) 
     return cumulative_distances
+
+def calculate_distance(km_start: float, km_end: float):
+    return abs(km_end - km_start)

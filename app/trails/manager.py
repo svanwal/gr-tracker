@@ -2,13 +2,14 @@ from app.models import User, Trail, Hike, AuthorizationException, FileMissingExc
 from pathlib import Path
 from app.analysis import calculate_stats
 
+
 class TrailManager():
-    def __init__(self, session, actor: User=None):
-        self.actor = actor
+    def __init__(self, session, user: User=None):
+        self.user = user
         self.session = session
 
     def add_trail(self, name: str, dispname: str, fullname: str):
-        if not self.actor.is_admin:
+        if not self.user.is_admin:
             raise AuthorizationException
         path_to_csv_file = Path(f"app/data/{name}.csv")
         if not path_to_csv_file.is_file():
@@ -23,7 +24,7 @@ class TrailManager():
         return trail
 
     def delete_trail(self, name: str):
-        if not self.actor.is_admin:
+        if not self.user.is_admin:
             raise AuthorizationException
         trail = Trail.query.where(Trail.name==name).one_or_none()
         if trail:
@@ -31,7 +32,7 @@ class TrailManager():
             self.session.commit
     
     def edit_trail(self, id: int, new_name:str="", new_dispname:str="", new_fullname:str=""):
-        if not self.actor.is_admin:
+        if not self.user.is_admin:
             raise AuthorizationException
         trail = Trail.query.where(Trail.id==id).one()
         if new_name:
@@ -44,6 +45,7 @@ class TrailManager():
         if new_fullname:
             trail.fullname = new_fullname
         self.session.commit()
+        return trail
 
     def list_trails(self, name=""):
         if name:

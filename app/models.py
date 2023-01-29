@@ -160,7 +160,7 @@ class Trail(db.Model):
         
     def calculate_length(self):
         geometry = self.get_geometry()
-        length = geometry['cumulative_distances'][-1]
+        length = geometry.distances[-1]
         self.length = round(10*length)/10
         
     def __repr__(self):
@@ -232,3 +232,18 @@ class AuthorizationException(Exception):
 class FileMissingException(Exception):
     def __init__(self):
         self.message = "This action cannot be performed because a file is missing."
+
+
+class LoggedInException(Exception):
+    def __init__(self):
+        self.message = "You must be logged in to perform that action."
+
+
+class LocationException(Exception):
+    def __init__(self):
+        self.message = "One of the hike endpoints is invalid."
+
+
+class ExistenceException(Exception):
+    def __init__(self):
+        self.message = "Database entry not found."
