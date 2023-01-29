@@ -11,12 +11,14 @@
         <form style="display:inline;" method="GET" action={{url_for("trails.show_all_trails", name=trail.name)}}>
             <button class="btn btn-primary" type="submit">Back to all trails</button>
         </form>
+        {% if user and user.is_admin %}
         <form style="display:inline;" method="GET" action={{url_for("trails.edit_trail", name=trail.name)}}>
             <button class="btn btn-warning" type="submit">Edit</button>
         </form>
         <form style="display:inline;" method="POST" action={{url_for("trails.delete_trail", name=trail.name)}}>
             <button class="btn btn-danger" type="submit">Delete</button>
         </form>
+        {% endif %}
     </div>
 </div>
 

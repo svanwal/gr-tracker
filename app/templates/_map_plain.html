@@ -4,15 +4,15 @@
     <script>
         // Process input variables
         const coordinates = JSON.parse('{{ raw_coordinates | tojson }}');
-        const center_coordinate = JSON.parse('{{ raw_center_coordinate | tojson }}');
-        const cumulative_distances = JSON.parse('{{ raw_cumulative_distances | tojson }}');
+        const center = JSON.parse('{{ raw_center | tojson }}');
+        const distances = JSON.parse('{{ raw_distances | tojson }}');
 
         // Initialize map
         mapboxgl.accessToken = 'pk.eyJ1IjoianNvbWEiLCJhIjoibFJmYl9JWSJ9.AUm8d76cbOvVEn2mMeG_ZA';
         var map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/outdoors-v9',
-            center: center_coordinate,
+            center: center,
             zoom: 7,
         });
 
@@ -66,10 +66,10 @@
             }
             let mouse_to_trail = Math.min.apply(Math, mouse_to_coordinates);
             let index_nearest_coord = mouse_to_coordinates.indexOf(mouse_to_trail);
-            let nearest_cumulative_distance = Math.round(10 * cumulative_distances[index_nearest_coord]) / 10
+            let nearest_distance = Math.round(10 * distances[index_nearest_coord]) / 10
             marker.setLngLat(coordinates[index_nearest_coord]);
             marker.addTo(map);
-            let popup_text = `${nearest_cumulative_distance} km`
+            let popup_text = `${nearest_distance} km`
             popup.setLngLat(coordinates[index_nearest_coord]).setHTML(popup_text).addTo(map);
         });
     </script>

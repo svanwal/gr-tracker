@@ -33,8 +33,10 @@
     {% endfor %}
 </table>
 
+{% if user and user.is_admin %}
 <form method="GET" action={{url_for("trails.add_trail")}}>
     <button class="btn btn-success" type="submit">Add new trail</button>
 </form>
+{% endif %}
 
 {% endblock %}

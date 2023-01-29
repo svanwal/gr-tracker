@@ -22,11 +22,11 @@ def before_request():
     g.locale = str(get_locale())
 
 
-@bp.route('/', methods=['GET', 'POST'])
-@bp.route('/index', methods=['GET', 'POST'])
-@login_required
+@bp.route('/', methods=['GET'])
+@bp.route('/index', methods=['GET'])
 def index():
     return render_template('index.html', title='Home', user=current_user)
+
 
 @bp.route('/user/<username>')
 @login_required

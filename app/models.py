@@ -177,18 +177,7 @@ class Trail(db.Model):
         self.calculate_length()
 
     def get_geometry(self):
-        with open(self.filename, newline='') as file:
-            reader = csv.reader(file)
-            next(reader, None)
-            data = list(reader)
-        coordinates = [[float(row[1]),float(row[0])] for row in data]
-        cumulative_distances = [float(row[3]) for row in data]
-        center_coordinate = coordinates[int(len(coordinates)/2)]
-        return {
-            'coordinates': coordinates,
-            'cumulative_distances': cumulative_distances,
-            'center_coordinate': center_coordinate,
-        }
+        return TrailGeometry(trail=self)
 
     def get_coordinate_range(self, km_start, km_end):
         geometry = self.get_geometry()
@@ -197,6 +186,20 @@ class Trail(db.Model):
         dcum_end = min(geometry['cumulative_distances'], key=lambda x:abs(x-km_end))
         i_end = geometry['cumulative_distances'].index(dcum_end)
         return geometry['coordinates'][i_start:i_end]
+
+
+class TrailGeometry():
+    def __init__(self,trail):
+        with open(trail.filename, newline='') as file:
+            reader = csv.reader(file)
+            next(reader, None)
+            data = list(reader)
+        coordinates = [[float(row[1]),float(row[0])] for row in data]
+        distances = [float(row[3]) for row in data]
+        center = coordinates[int(len(coordinates)/2)]
+        self.coordinates = coordinates
+        self.distances = distances
+        self.center = center
 
 
 class Hike(db.Model):
@@ -219,3 +222,13 @@ class Hike(db.Model):
 
     def update_distance(self):
         self.distance = round(abs(self.km_start - self.km_end),1)
+
+
+class AuthorizationException(Exception):
+    def __init__(self):
+        self.message = "You are not authorized to perform this action."
+
+
+class FileMissingException(Exception):
+    def __init__(self):
+        self.message = "This action cannot be performed because a file is missing."

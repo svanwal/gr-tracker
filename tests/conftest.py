@@ -2,10 +2,11 @@ import pytest
 from app import db, create_app
 import os
 from flask import Flask
+from app.models import User
 os.environ['DATABASE_URL'] = 'sqlite://'
 
 @pytest.fixture()
-def fakedb():
+def dummy_db():
     app = create_app()
     app_context = app.app_context()
     app_context.push()
@@ -19,14 +20,30 @@ def fakedb():
 def regular_user():
     user = User(username="user", email="user@gmail.com",is_admin=False)
     user.set_password("password")
-    db.session.add(user)
-    db.session.commit()
     return user
 
 @pytest.fixture()
 def admin_user():
     user = User(username="admin", email="admin@gmail.com",is_admin=True)
     user.set_password("password")
-    db.session.add(user)
-    db.session.commit()
     return user
+
+@pytest.fixture()
+def dummy_existing_trail():
+    return{
+        "name":"existingtrail",
+        "dispname":"TestTrail",
+        "fullname":"A Trail for Testing",
+    }
+
+@pytest.fixture()
+def dummy_nonexisting_trail():
+    return{
+        "name":"nonexistingtrail",
+        "dispname":"TestTrail",
+        "fullname":"A Trail for Testing",
+    }
+
+@pytest.fixture()
+def anonymous_user():
+    return None
