@@ -1,4 +1,4 @@
-from app.models import Route
+from app.models import Trail
 
 def test_route_can_be_added(fakedb):
     db = fakedb
@@ -15,3 +15,23 @@ def test_route_can_be_added(fakedb):
     assert routes[0].displayname == 'GR131'
     assert routes[0].fullname == 'Brugse Ommeland - Ieperboog'
     assert routes[0].length == 144.05
+
+def test_admin_user_can_add_trail(fakedb,admin_user):
+    user = 
+    pass
+
+def test_admin_user_can_edit_trail(fakedb):
+    pass
+
+def test_admin_user_can_delete_trail(fakedb):
+    pass
+
+def test_regular_user_cannot_add_trail(fakedb):
+    pass
+
+def test_regular_user_cannot_edit_trail(fakedb):
+    pass
+
+def test_regular_user_cannot_delete_trail(fakedb):
+    pass
+

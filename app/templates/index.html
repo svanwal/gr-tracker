@@ -2,6 +2,12 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-<h1>{{ _('Hi, %(username)s!', username=current_user.username) }}</h1>
+{% if not user %}
+<h1>Welcome to GR tracker</h1>
+{% elif user.is_admin %}
+<h1>Hello, admin user <i>{{user.username}}</i>!</h1>
+{% else %}
+<h1>Hello, user <i>{{user.username}}</i>!</h1>
+{% endif %}
 
 {% endblock %}

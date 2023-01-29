@@ -21,7 +21,7 @@ def show_all_trails():
     return render_template(
         'trails.html',
         title='List of trails',
-        trails=trails
+        trails=trails,
     )
 
 # Add a new trail
