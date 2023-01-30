@@ -3,11 +3,12 @@ from app import db, create_app
 import os
 from flask import Flask
 from app.models import User
-os.environ['DATABASE_URL'] = 'sqlite://'
+from config import TestConfig
 
 @pytest.fixture()
 def dummy_db():
-    app = create_app()
+    os.environ['DATABASE_URL'] = 'sqlite:///test_db.sqlite'
+    app = create_app(config_class=TestConfig)
     app_context = app.app_context()
     app_context.push()
     db.create_all()

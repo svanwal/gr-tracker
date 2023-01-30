@@ -9,20 +9,28 @@ from langdetect import detect, LangDetectException
 from app import db
 from app.hikes import bp
 from app.hikes.forms import HikeForm, TrailSelectionForm
+from app.hikes.manager import HikeManager
+from app.trails.manager import TrailManager
 from app.models import User, Trail, Hike
 from app.analysis import calculate_stats
 
 
 # View all hikes
 @bp.route('/hikes', methods=['GET', 'POST'])
-@login_required
 def show_all_hikes():
-    hikes = Hike.query.order_by(Hike.timestamp.desc()).all()
+    hm = HikeManager(session=db.session,user=current_user)
+    hikes = hm.list_hikes()
     form = TrailSelectionForm()
     if form.validate_on_submit():
-        trail = Trail.query.where(Trail.id==form.trail.data).one_or_404()
+        tm = TrailManager(session=db.session,user=current_user)
+        trail = tm.list_trails(name=form.trail.data)
         return redirect(url_for('hikes.add_hike', name=trail.name))
     return render_template('hikes.html', title='Hike', hikes=hikes, form=form)
+
+
+
+
+
 
 
 # View all hikes by a specific user
@@ -110,9 +118,9 @@ def add_hike(name):
         title='Add new hike',
         form=form,
         trail=trail,
-        raw_coordinates=geometry['coordinates'], # TODO: can I just pass the geometry object?
-        raw_cumulative_distances=geometry['cumulative_distances'],
-        raw_center_coordinate=geometry['center_coordinate'],
+        raw_coordinates=geometry.coordinates, # TODO: can I just pass the geometry object?
+        raw_cumulative_distances=geometry.distances,
+        raw_center_coordinate=geometry.center,
     )
     
 
@@ -138,9 +146,9 @@ def edit_hike(id):
         form=form,
         hike=hike,
         trail=trail,
-        raw_coordinates=geometry['coordinates'], # TODO: can I just pass the geometry object?
-        raw_cumulative_distances=geometry['cumulative_distances'],
-        raw_center_coordinate=geometry['center_coordinate'],
+        raw_coordinates=geometry.coordinates, # TODO: can I just pass the geometry object?
+        raw_cumulative_distances=geometry.distances,
+        raw_center_coordinate=geometry.center,
     )
 
 

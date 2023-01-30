@@ -3,6 +3,7 @@
 {% block styles %}
 {{super()}}
 <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.css' rel='stylesheet' />
+<link href='{{ url_for("static", filename="map_styles.css") }}' rel='stylesheet' />
 {% endblock %}
 
 {% block title %}

@@ -55,3 +55,11 @@ class HikeManager():
         hike.distance = calculate_distance(hike.km_start, hike.km_end)
         self.session.commit()
         return hike
+
+    def list_hikes(self, name=""):
+        if name:
+            try:
+                return Hike.query.where(Hike.walker.username==name).one()
+            except:
+                return None
+        return Hike.query.order_by(Hike.timestamp).all()

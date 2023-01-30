@@ -41,4 +41,4 @@ class TrailSelectionForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(TrailSelectionForm, self).__init__(*args, **kwargs)
-        self.trail.choices = [(t.id, t.dispname) for t in Trail.query.order_by(Trail.name).all()]
+        self.trail.choices = [(t.name, t.dispname) for t in Trail.query.order_by(Trail.name).all()]
