@@ -7,7 +7,6 @@ from config import TestConfig
 
 @pytest.fixture()
 def dummy_db():
-    os.environ['DATABASE_URL'] = 'sqlite:///test_db.sqlite'
     app = create_app(config_class=TestConfig)
     app_context = app.app_context()
     app_context.push()

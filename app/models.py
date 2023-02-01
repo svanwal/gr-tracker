@@ -181,11 +181,11 @@ class Trail(db.Model):
 
     def get_coordinate_range(self, km_start, km_end):
         geometry = self.get_geometry()
-        dcum_start = min(geometry['cumulative_distances'], key=lambda x:abs(x-km_start))
-        i_start = geometry['cumulative_distances'].index(dcum_start)
-        dcum_end = min(geometry['cumulative_distances'], key=lambda x:abs(x-km_end))
-        i_end = geometry['cumulative_distances'].index(dcum_end)
-        return geometry['coordinates'][i_start:i_end]
+        dcum_start = min(geometry.distances, key=lambda x:abs(x-km_start))
+        i_start = geometry.distances.index(dcum_start)
+        dcum_end = min(geometry.distances, key=lambda x:abs(x-km_end))
+        i_end = geometry.distances.index(dcum_end)
+        return geometry.coordinates[i_start:i_end]
 
 
 class TrailGeometry():

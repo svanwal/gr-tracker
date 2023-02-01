@@ -56,10 +56,14 @@ class HikeManager():
         self.session.commit()
         return hike
 
-    def list_hikes(self, name=""):
-        if name:
-            try:
-                return Hike.query.where(Hike.walker.username==name).one()
-            except:
-                return None
+    def list_hikes(self, username="", id=""):
+        if username:
+            hikes = Hike.query.join(User, Hike.user_id==User.id, isouter=True).where(User.username==username).all()
+            return hikes
+        if id:
+            hikes = Hike.query.where(Hike.id==id).one()
+            return hikes
         return Hike.query.order_by(Hike.timestamp).all()
+
+    def list_hikes_by_user_on_trail(self, user_id, trail_id):
+        return Hike.query.where(Hike.user_id==user_id).where(Hike.trail_id==trail_id).all()

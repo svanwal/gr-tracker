@@ -13,6 +13,7 @@ from app.hikes.manager import HikeManager
 from app.trails.manager import TrailManager
 from app.models import User, Trail, Hike
 from app.analysis import calculate_stats
+from app.auth.manager import UserManager
 
 
 # View all hikes
@@ -28,29 +29,26 @@ def show_all_hikes():
     return render_template('hikes.html', title='Hike', hikes=hikes, form=form)
 
 
-
-
-
-
-
 # View all hikes by a specific user
 @bp.route('/hikes/user/<username>', methods=['GET', 'POST'])
 @login_required
 def show_user_hikes(username):
-    user = User.query.where(User.username==username).one()
-    hikes = Hike.query.where(Hike.walker==user).order_by(Hike.timestamp.desc()).all()
+    hm = HikeManager(session=db.session,user=current_user)
+    hikes = hm.list_hikes(username=username)
     form = TrailSelectionForm()
     if form.validate_on_submit():
-        trail = Trail.query.where(Trail.id==form.trail.data).one_or_404()
+        tm = TrailManager(session=db.session,user=current_user)
+        trail = tm.list_trails(name=form.trail.data)
         return redirect(url_for('hikes.add_hike', name=trail.name))
-    return render_template('hikes.html', title='Hike', hikes=hikes, username=user.username, form=form)
+    return render_template('hikes.html', title='Hike', hikes=hikes, username=username, form=form)
 
 
 # View a single hike
 @bp.route('/hikes/<id>', methods=['GET'])
 @login_required
 def show_single_hike(id):
-    hike = Hike.query.where(Hike.id==id).one_or_404()
+    hm = HikeManager(session=db.session,user=current_user)
+    hike = hm.list_hikes(id=id)
     trail = hike.path
     geometry = trail.get_geometry()
     hike_coordinates = trail.get_coordinate_range(km_start=hike.km_start,km_end=hike.km_end)
@@ -59,9 +57,9 @@ def show_single_hike(id):
         title='Hike',
         hike=hike,
         trail=trail,
-        raw_coordinates=geometry['coordinates'], # TODO: can I just pass the geometry object?
-        raw_cumulative_distances=geometry['cumulative_distances'],
-        raw_center_coordinate=geometry['center_coordinate'],
+        raw_coordinates=geometry.coordinates, # TODO: can I just pass the geometry object?
+        raw_cumulative_distances=geometry.distances,
+        raw_center_coordinate=geometry.center,
         raw_hike_coordinates=hike_coordinates,
     )
 
@@ -70,9 +68,12 @@ def show_single_hike(id):
 @bp.route('/hikes/<trailname>/<username>', methods=['GET'])
 @login_required
 def show_trail_hikes(trailname,username):
-    trail = Trail.query.where(Trail.name==trailname).one_or_404()
-    user = User.query.where(User.username==username).one_or_404()
-    hikes = Hike.query.where(Hike.trail_id==trail.id).where(Hike.user_id==user.id).all()
+    tm = TrailManager(session=db.session,user=current_user)
+    trail = tm.list_trails(name=trailname)
+    um = UserManager(session=db.session,user=current_user)
+    user = um.list_users(username=username)
+    hm = HikeManager(session=db.session,user=current_user)
+    hikes = hm.list_hikes_by_user_on_trail(user.id, trail.id)
     stats = calculate_stats(hikes)
     geometry = trail.get_geometry()
     hikes_coordinates = []
@@ -84,9 +85,9 @@ def show_trail_hikes(trailname,username):
         trail=trail,
         user=user,
         hikes=hikes,
-        raw_coordinates=geometry['coordinates'], # TODO: can I just pass the geometry object?
-        raw_cumulative_distances=geometry['cumulative_distances'],
-        raw_center_coordinate=geometry['center_coordinate'],
+        raw_coordinates=geometry.coordinates, # TODO: can I just pass the geometry object?
+        raw_cumulative_distances=geometry.distances,
+        raw_center_coordinate=geometry.center,
         raw_hike_coordinates=hikes_coordinates,
         stats=stats,
     )
@@ -96,21 +97,12 @@ def show_trail_hikes(trailname,username):
 @bp.route('/hikes/new/<name>', methods=['GET', 'POST'])
 @login_required
 def add_hike(name):
-    trail = Trail.query.where(Trail.name==name).one_or_404()
+    tm = TrailManager(session=db.session,user=current_user)
+    trail = tm.list_trails(name=name)
     geometry = trail.get_geometry()
     form = HikeForm(trail_id=trail.id)
     if form.validate_on_submit():
-        distance = abs(form.km_start.data - form.km_end.data)
-        hike = Hike(
-            trail_id=trail.id,
-            walker=current_user,
-            timestamp=form.timestamp.data,
-            km_start=form.km_start.data,
-            km_end=form.km_end.data,
-            distance=distance,
-        )
-        db.session.add(hike)
-        db.session.commit()
+        hm.add_hike(trail_id=trail.id, km_start=form.km_start.data, km_end=form.km_end.data, timestamp=form.timestamp.data)
         flash(f"Successfully registered a new hike on trail {trail.dispname}")
         return redirect(url_for('hikes.show_user_hikes', username=current_user.username))
     return render_template(
@@ -122,20 +114,24 @@ def add_hike(name):
         raw_cumulative_distances=geometry.distances,
         raw_center_coordinate=geometry.center,
     )
-    
+
 
 # Edit a hike
 @bp.route('/hikes/<id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_hike(id):
-    hike = Hike.query.where(Hike.id==id).one_or_404()
+    hm = HikeManager(session=db.session,user=current_user)
+    hike = hm.list_hikes(id=id)
     trail = hike.path
     geometry = trail.get_geometry()
     hike_coordinates = trail.get_coordinate_range(km_start=hike.km_start,km_end=hike.km_end)
     form = HikeForm(trail_id=trail.id)
     if request.method == "POST" and form.validate_on_submit(): # Post edits to the hike
-        hike.fill_from_form(form)
-        db.session.commit()
+        hm.edit_hike(
+            new_timestamp=form.timestamp.data,
+            new_km_start=form.new_km_start.data,
+            new_km_end=form.new_km_end.data
+        )
         flash(f"The edits to hike {hike.id} have been saved.")
         return redirect(url_for('hikes.show_single_hike', id=hike.id))
     elif request.method == 'GET': # Display the form to edit the trail
@@ -156,9 +152,7 @@ def edit_hike(id):
 @bp.route('/hikes/<id>/delete', methods=['POST'])
 @login_required
 def delete_hike(id):
-    hike = Hike.query.filter_by(id=id).first_or_404()
-    trail = hike.path
-    db.session.delete(hike)
-    db.session.commit()
+    hm = HikeManager(session=db.session,user=current_user)
+    hike = hm.delete_hike(id=id)
     flash(f"Your hike has been deleted.")
     return redirect(url_for('hikes.show_all_hikes'))

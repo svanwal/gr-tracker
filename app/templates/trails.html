@@ -5,12 +5,14 @@
 <h1>Available hiking trails</h1>
 
 <table class="table table-hover">
-    <tr>
-        <td>Name</td>
-        <td>Full name</td>
-        <td>Length</td>
-        <td></td>
-    </tr>
+    <thead class="thead-dark">
+        <tr>
+            <th>Name</th>
+            <th>Full name</th>
+            <th>Length</th>
+            <th></th>
+        </tr>
+    </thead>
     {% for trail in trails %}
     <tr>
         <td>

@@ -17,6 +17,13 @@
             zoom: 7,
         });
 
+        // Zoom to bounds of LineString
+        var bounds = new mapboxgl.LngLatBounds();
+        coordinates.forEach(function (coordinate) {
+            bounds.extend(coordinate);
+        });
+        map.fitBounds(bounds, { padding: 75 });
+
         // Slice route according to form fields
         // document.getElementById('info').innerHTML = 'initialized'
         startfield = document.getElementById('km_start');

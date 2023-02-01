@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 class HikeForm(FlaskForm):
-    timestamp = DateField('Date', format='%Y-%m-%d', validators=[DataRequired()])
+    timestamp = DateField('Date', format='%d-%m-%Y', validators=[DataRequired()])
     km_start = FloatField('Start km', validators=[InputRequired()])
     km_end = FloatField('End km', validators=[InputRequired()])
     submit = SubmitField('Submit')
