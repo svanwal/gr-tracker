@@ -25,3 +25,19 @@ body {
     padding-top: 30px;
     padding-bottom: 30px;
 }
+
+#map-tight {
+    height: 500px;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin-top: 0px;
+}
+
+.map-container-tight {
+    padding-top: 30px;
+    padding-bottom: 30px;
+}

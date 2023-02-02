@@ -1,7 +1,7 @@
 <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.js'></script>
 <div class="container">
-    <div class="map-container">
-        <div id='map' style='width: 100%;'></div>
+    <div class="map-container-tight">
+        <div id='map-tight' style='width: 100%;'></div>
     </div>
 
     <script>
@@ -11,7 +11,7 @@
         const center_coordinate = JSON.parse('{{ raw_center_coordinate | tojson }}');
         const cumulative_distances = JSON.parse('{{ raw_cumulative_distances | tojson }}');
         var map = new mapboxgl.Map({
-            container: 'map',
+            container: 'map-tight',
             style: 'mapbox://styles/mapbox/outdoors-v9',
             center: center_coordinate,
             zoom: 7,

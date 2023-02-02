@@ -7,7 +7,7 @@
 <table class="table table-hover">
     <thead class="thead-dark">
         <tr>
-            <th>Name</th>
+            <th>Display name</th>
             <th>Full name</th>
             <th>Length</th>
             <th></th>
@@ -15,21 +15,28 @@
     </thead>
     {% for trail in trails %}
     <tr>
+        <td style="vertical-align:middle;">{{trail.dispname}}</td>
+        <td style="vertical-align:middle;">{{trail.fullname}}</td>
+        <td style="vertical-align:middle;">{{trail.length}} km</td>
         <td>
-            <form method="GET" action={{url_for("trails.show_single_trail", name=trail.name)}}>
+            <form style="display:inline;" method="GET" action={{url_for("trails.show_single_trail", name=trail.name)}}>
+                <button class="btn btn-secondary btn-sm" type="submit">View trail details</button>
+            </form>
+            <form style="display:inline;" method="GET" action={{url_for("hikes.add_hike", name=trail.name)}}>
+                <button class="btn btn-success btn-sm" type="submit">Add hike on this trail</button>
+            </form>
+
+
+            <!-- <form method="GET" action={{url_for("trails.show_single_trail", name=trail.name)}}>
                 <button class="btn btn-primary btn-sm" type="submit">
-                    {{trail.dispname}}
+                    View details
                 </button>
             </form>
-        </td>
-        <td>{{trail.fullname}}</td>
-        <td>{{trail.length}} km</td>
-        <td>
             <form method="GET" action={{url_for("hikes.add_hike", name=trail.name)}}>
                 <button class="btn btn-info btn-sm" type="submit">
                     Add hike on {{trail.dispname}}
                 </button>
-            </form>
+            </form> -->
         </td>
     </tr>
     {% endfor %}

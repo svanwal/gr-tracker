@@ -2,21 +2,25 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-<h1>Trail details</h1>
-<h2>{{trail.dispname}} ({{trail.fullname}})</h2>
+<h1>Trail details: {{trail.dispname}} ({{trail.fullname}})</h1>
 <p>This trail has a total length of {{trail.length}} km.</p>
 
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-12">
         <form style="display:inline;" method="GET" action={{url_for("trails.show_all_trails", name=trail.name)}}>
-            <button class="btn btn-primary" type="submit">Back to all trails</button>
+            <button class="btn btn-secondary" type="submit">View all trails</button>
         </form>
+        {% if user %}
+        <form style="display:inline;" method="GET" action={{url_for("hikes.add_hike", name=trail.name)}}>
+            <button class="btn btn-success" type="submit">Add hike on this trail</button>
+        </form>
+        {% endif %}
         {% if user and user.is_admin %}
         <form style="display:inline;" method="GET" action={{url_for("trails.edit_trail", name=trail.name)}}>
-            <button class="btn btn-warning" type="submit">Edit</button>
+            <button class="btn btn-warning" type="submit">Edit trail</button>
         </form>
         <form style="display:inline;" method="POST" action={{url_for("trails.delete_trail", name=trail.name)}}>
-            <button class="btn btn-danger" type="submit">Delete</button>
+            <button class="btn btn-danger" type="submit">Delete trail</button>
         </form>
         {% endif %}
     </div>
