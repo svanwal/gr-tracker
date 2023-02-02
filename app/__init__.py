@@ -11,6 +11,7 @@ from flask_moment import Moment
 from flask_babel import Babel, lazy_gettext as _l
 from elasticsearch import Elasticsearch
 from config import Config
+# from flask_jsglue import JSGlue
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -25,6 +26,7 @@ babel = Babel()
 
 def create_app(config_class=Config):
     app = Flask(__name__)
+    
     app.config.from_object(config_class)
 
     db.init_app(app)
@@ -34,6 +36,7 @@ def create_app(config_class=Config):
     bootstrap.init_app(app)
     moment.init_app(app)
     babel.init_app(app)
+    # jsglue = JSGlue(app)
     app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']]) \
         if app.config['ELASTICSEARCH_URL'] else None
 

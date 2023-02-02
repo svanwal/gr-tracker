@@ -14,6 +14,8 @@ from app.trails.manager import TrailManager
 from app.models import User, Trail, Hike
 from app.analysis import calculate_stats
 from app.auth.manager import UserManager
+import json
+from markupsafe import escape
 
 
 # View all hikes
@@ -102,9 +104,11 @@ def add_hike(name):
     geometry = trail.get_geometry()
     form = HikeForm(trail_id=trail.id)
     if form.validate_on_submit():
+        hm = HikeManager(session=db.session,user=current_user)
         hm.add_hike(trail_id=trail.id, km_start=form.km_start.data, km_end=form.km_end.data, timestamp=form.timestamp.data)
         flash(f"Successfully registered a new hike on trail {trail.dispname}")
         return redirect(url_for('hikes.show_user_hikes', username=current_user.username))
+    raw_geometry = escape(json.dumps(geometry.__dict__))
     return render_template(
         'hike_new.html',
         title='Add new hike',
@@ -128,9 +132,10 @@ def edit_hike(id):
     form = HikeForm(trail_id=trail.id)
     if request.method == "POST" and form.validate_on_submit(): # Post edits to the hike
         hm.edit_hike(
+            id=hike.id,
             new_timestamp=form.timestamp.data,
-            new_km_start=form.new_km_start.data,
-            new_km_end=form.new_km_end.data
+            new_km_start=form.km_start.data,
+            new_km_end=form.km_end.data,
         )
         flash(f"The edits to hike {hike.id} have been saved.")
         return redirect(url_for('hikes.show_single_hike', id=hike.id))

@@ -10,6 +10,7 @@ from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm
 from app.models import User, Post, Trail, Hike
 from app.translate import translate
 from app.main import bp
+from app.trails.manager import TrailManager
 import math
 
 
@@ -25,7 +26,17 @@ def before_request():
 @bp.route('/', methods=['GET'])
 @bp.route('/index', methods=['GET'])
 def index():
-    return render_template('index.html', title='Home', user=current_user)
+    tm = TrailManager(session=db.session)
+    trails = tm.list_trails()
+    trails_coordinates = []
+    trails_names = []
+    names = []
+    for trail in trails:
+        geometry = trail.get_geometry()
+        trails_coordinates.append(geometry.coordinates)
+        trails_names.append(trail.dispname)
+        names.append(trail.name)
+    return render_template('index.html', title='Home', user=current_user, ntrails=len(trails), raw_trails_coordinates=trails_coordinates, trailnames=trails_names, raw_names=names)
 
 
 @bp.route('/user/<username>')

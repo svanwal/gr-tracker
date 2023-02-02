@@ -1,0 +1,124 @@
+<script src='https://api.tiles.mapbox.com/mapbox-gl-js/v1.0.0/mapbox-gl.js'></script>
+<div class="container">
+    <div id='map' style='width: 100%; height: 400px;'></div>
+    <script>
+        // Process input variables
+        const trails_coordinates = JSON.parse('{{ raw_trails_coordinates | tojson }}');
+        const names = JSON.parse('{{ trailnames | tojson }}');
+        const real_names = JSON.parse('{{ raw_names | tojson }}');
+
+
+        // Initialize map
+        mapboxgl.accessToken = 'pk.eyJ1IjoianNvbWEiLCJhIjoibFJmYl9JWSJ9.AUm8d76cbOvVEn2mMeG_ZA';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/outdoors-v9',
+            center: [4.2, 50.5],
+            zoom: 6,
+        });
+
+
+        let features = [];
+        for (let i = 0; i < trails_coordinates.length; i++) {
+            let feature = {
+                'type': 'Feature',
+                'properties': { 'description': names[i] },
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': trails_coordinates[i],
+                }
+            };
+            features.push(feature);
+        }
+
+        // Draw trails
+        map.on('load', () => {
+            for (let i = 0; i < trails_coordinates.length; i++) {
+                // add source
+                map.addSource(`source_${names[i]}`, {
+                    'type': 'geojson',
+                    'data': {
+                        'type': 'Feature',
+                        'properties': { 'description': names[i] },
+                        'geometry': {
+                            'type': 'LineString',
+                            'coordinates': trails_coordinates[i],
+                        }
+                    }
+                });
+                // add layer
+                map.addLayer({
+                    'id': `thick_${names[i]}`,
+                    'type': 'line',
+                    'source': `source_${names[i]}`,
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    'paint': {
+                        'line-color': '#000000',
+                        'line-width': 10,
+                        'line-opacity': 0,
+                    }
+                });
+                map.addLayer({
+                    'id': `thin_${names[i]}`,
+                    'type': 'line',
+                    'source': `source_${names[i]}`,
+                    'layout': {
+                        'line-join': 'round',
+                        'line-cap': 'round'
+                    },
+                    'paint': {
+                        'line-color': '#000000',
+                        'line-width': 2,
+                    }
+                });
+            }
+
+            // Create a popup, but don't add it to the map yet.
+            const popup = new mapboxgl.Popup({
+                closeButton: false,
+                closeOnClick: false
+            });
+
+            let mouse_on = false;
+
+            for (let i = 0; i < trails_coordinates.length; i++) {
+                map.on('mouseenter', `thick_${names[i]}`, (e) => {
+                    if (!mouse_on) {
+                        // Change the cursor style as a UI indicator.
+                        map.getCanvas().style.cursor = 'pointer';
+
+                        // Copy coordinates array.
+                        const description = e.features[0].properties.description;
+
+                        // Populate the popup and set its coordinates
+                        popup.setLngLat(e.lngLat).setHTML(description).addTo(map);
+                        mouse_on = true;
+                        map.setPaintProperty(`thin_${names[i]}`, 'line-width', 5);
+                        map.setPaintProperty(`thin_${names[i]}`, 'line-color', '#FF0000');
+                    }
+                });
+                map.on('mousemove', (e) => {
+                    if (mouse_on) {
+                        popup.setLngLat(e.lngLat).addTo(map);
+
+                    }
+                });
+                map.on('mouseleave', `thick_${names[i]}`, () => {
+                    map.getCanvas().style.cursor = '';
+                    popup.remove();
+                    mouse_on = false;
+                    map.setPaintProperty(`thin_${names[i]}`, 'line-width', 2);
+                    map.setPaintProperty(`thin_${names[i]}`, 'line-color', '#000000');
+                });
+                map.on('click', `thick_${names[i]}`, () => {
+                    window.location.assign(`/trails/${real_names[i]}`);
+                });
+            }
+        });
+
+
+    </script>
+</div>

@@ -28,6 +28,7 @@ rq = "^1.12.0"
 python-dotenv = "^0.21.0"
 flask-httpauth = "^4.7.0"
 numpy = "^1.24.1"
+flask-jsglue = "^0.3.1"
 
 
 

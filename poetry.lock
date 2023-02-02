@@ -509,6 +509,20 @@ files = [
 flask = "*"
 
 [[package]]
+name = "flask-jsglue"
+version = "0.3.1"
+description = "Flask-JSGlue helps hook up your Flask application nicely with the front end."
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "Flask-JSGlue-0.3.1.tar.gz", hash = "sha256:915e010ee228c711d56530bb5fbbefd1ca8bbd7e0fabfed49c85301288b45df9"},
+]
+
+[package.dependencies]
+Flask = "*"
+
+[[package]]
 name = "flask-login"
 version = "0.6.2"
 description = "User authentication and session management for Flask."
@@ -1197,4 +1211,4 @@ email = ["email-validator"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "d6d5d2bf8ffff945deb0ae72eb4aeb7c2a8b533c58fde47c0ace40fe038aa894"
+content-hash = "754f7fb062a34e92b4fdee7dc237a0481f31b2451b30388d5b9ed1f846c44c16"

@@ -37,6 +37,14 @@ def dummy_existing_trail():
     }
 
 @pytest.fixture()
+def dummy_existing_trail2():
+    return{
+        "name":"existingtrail2",
+        "dispname":"TestTrail2",
+        "fullname":"Another Trail for Testing",
+    }
+
+@pytest.fixture()
 def dummy_nonexisting_trail():
     return{
         "name":"nonexistingtrail",
