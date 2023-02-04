@@ -1,5 +1,5 @@
-from app.models import User, Post
-from datetime import datetime, timedelta
+from app.models import User, PrivacyOption
+from app.auth.manager import UserManager
 
 
 def test_password_is_hashed():
@@ -16,62 +16,81 @@ def test_avatar_is_obtained():
                                          '?d=identicon&s=128')
 
 
-def test_users_can_follow(fakedb):
-    db = fakedb
-    u1 = User(username='john', email='john@example.com')
-    u2 = User(username='susan', email='susan@example.com')
-    db.session.add_all([u1,u2])
-    db.session.commit()
-    assert not u1.followed.all()
-    assert not u2.followed.all()
-
-    u1.follow(u2)
-    db.session.commit()
-    assert u1.is_following(u2)
-    assert u1.followed.count() == 1
-    assert u1.followed.first().username == 'susan'
-    assert u2.followers.count() == 1
-    assert u2.followers.first().username == 'john'
-
-    u1.unfollow(u2)
-    db.session.commit()
-    assert not u1.is_following(u2)
-    assert u1.followed.count() == 0
-    assert u2.followers.count() == 0
+def test_user_can_be_added_by_anyone(dummy_db,user_alice):
+    um = UserManager(session=dummy_db.session)
+    alice = um.add_user(**user_alice)
+    assert alice
 
 
-# def test_followed_posts_are_obtained(fakedb):
-#     db = fakedb
+def test_public_user_can_be_followed(dummy_db,user_alice,user_bob):
+    um = UserManager(session=dummy_db.session)
+    alice = um.add_user(**user_alice,privacy=PrivacyOption.public)
+    bob = um.add_user(**user_bob,privacy=PrivacyOption.public)
 
-#     # create four users
-#     u1 = User(username='john', email='john@example.com')
-#     u2 = User(username='susan', email='susan@example.com')
-#     u3 = User(username='mary', email='mary@example.com')
-#     u4 = User(username='david', email='david@example.com')
-#     db.session.add_all([u1, u2, u3, u4])
+    um_alice = UserManager(session=dummy_db.session,user=alice)
+    um_alice.follow_user(target_username=bob.username)
+    assert um.is_following_accepted(source_user=alice,target_user=bob)
+    assert not um.is_following(source_user=bob,target_user=alice)
+    
 
-#     # create four posts
-#     now = datetime.utcnow()
-#     p1 = Post(body="post from john", author=u1, timestamp=now + timedelta(seconds=1))
-#     p2 = Post(body="post from susan", author=u2, timestamp=now + timedelta(seconds=4))
-#     p3 = Post(body="post from mary", author=u3, timestamp=now + timedelta(seconds=3))
-#     p4 = Post(body="post from david", author=u4, timestamp=now + timedelta(seconds=2))
-#     db.session.add_all([p1, p2, p3, p4])
-#     db.session.commit()
+def test_private_user_cannot_be_followed(dummy_db,user_alice,user_bob):
+    um = UserManager(session=dummy_db.session)
+    alice = um.add_user(**user_alice,privacy=PrivacyOption.public)
+    bob = um.add_user(**user_bob,privacy=PrivacyOption.private)
 
-#     # setup the followers
-#     u1.follow(u2)  # john follows susan
-#     u1.follow(u4)  # john follows david
-#     u2.follow(u3)  # susan follows mary
-#     u3.follow(u4)  # mary follows david
-#     db.session.commit()
+    um_alice = UserManager(session=dummy_db.session,user=alice)
+    um_alice.follow_user(target_username=bob.username)
+    a = um.is_following(source_user=alice,target_user=bob)
+    assert not um.is_following(source_user=alice,target_user=bob)
+    assert not um.is_following(source_user=bob,target_user=alice)
 
-#     # check the followed posts of each user
-#     f1 = u1.followed_posts().all()
-#     f2 = u2.followed_posts().all()
-#     f3 = u3.followed_posts().all()
-#     f4 = u4.followed_posts().all()
-#     assert f1 == [p2, p4, p1]
-#     assert f2 == [p2, p3]
-#     assert f3 == [p3, p4]
-#     assert f4 == [p4]
+
+def test_friends_user_must_accept_follow_request(dummy_db,user_alice,user_bob):
+    um = UserManager(session=dummy_db.session)
+    alice = um.add_user(**user_alice,privacy=PrivacyOption.public)
+    bob = um.add_user(**user_bob,privacy=PrivacyOption.friends)
+
+    um_alice = UserManager(session=dummy_db.session,user=alice)
+    um_alice.follow_user(target_username=bob.username)
+    assert um.is_following(source_user=alice,target_user=bob)
+    assert not um.is_following_accepted(source_user=alice,target_user=bob)
+    assert not um.is_following(source_user=bob,target_user=alice)
+
+    um_bob = UserManager(session=dummy_db.session,user=bob)
+    um_bob.accept_following(source_username=alice.username)
+    assert um.is_following_accepted(source_user=alice,target_user=bob)
+    assert not um.is_following(source_user=bob,target_user=alice)
+
+
+def test_switching_privacy_to_public_accepts_all_follow_requests(dummy_db,user_alice,user_bob):
+    um = UserManager(session=dummy_db.session)
+    alice = um.add_user(**user_alice,privacy=PrivacyOption.public)
+    bob = um.add_user(**user_bob,privacy=PrivacyOption.friends)
+
+    um_alice = UserManager(session=dummy_db.session,user=alice)
+    um_alice.follow_user(target_username=bob.username)
+    assert um.is_following(source_user=alice,target_user=bob)
+    assert not um.is_following_accepted(source_user=alice,target_user=bob)
+
+    um_bob = UserManager(session=dummy_db.session,user=bob)
+    um_bob.set_privacy(new_privacy=PrivacyOption.public)
+    assert um.is_following_accepted(source_user=alice,target_user=bob)
+    assert not um.is_following(source_user=bob,target_user=alice)
+
+
+def test_switching_privacy_to_private_removes_all_followers(dummy_db,user_alice,user_bob):
+    um = UserManager(session=dummy_db.session)
+    alice = um.add_user(**user_alice,privacy=PrivacyOption.public)
+    bob = um.add_user(**user_bob,privacy=PrivacyOption.public)
+
+    um_alice = UserManager(session=dummy_db.session,user=alice)
+    um_alice.follow_user(target_username=bob.username)
+    assert um.is_following_accepted(source_user=alice,target_user=bob)
+    assert not um.is_following(source_user=bob,target_user=alice)
+
+    um_bob = UserManager(session=dummy_db.session,user=bob)
+    um_bob.set_privacy(new_privacy=PrivacyOption.private)
+
+    assert not um.is_following_accepted(source_user=alice,target_user=bob)
+    assert not um.is_following(source_user=alice,target_user=bob)
+    assert not um.is_following(source_user=bob,target_user=alice)

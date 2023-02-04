@@ -10,6 +10,13 @@ from app.search import add_to_index, remove_from_index, query_index
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.types import PickleType
 import csv
+from enum import Enum
+
+
+class PrivacyOption(Enum):
+    public = "public"
+    friends = "friends"
+    private = "private"
 
 
 class SearchableMixin(object):
@@ -58,7 +65,8 @@ db.event.listen(db.session, 'after_commit', SearchableMixin.after_commit)
 followers = db.Table(
     'followers',
     db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
-    db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
+    db.Column('followed_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('accepted', db.Boolean, default=False),
 )
 
 
@@ -71,6 +79,7 @@ class User(UserMixin, db.Model):
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     hikes = db.relationship('Hike', backref='walker', lazy='dynamic')
     about_me = db.Column(db.String(140))
+    privacy = db.Column(db.Enum(PrivacyOption), nullable=False, default=PrivacyOption.public)
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     followed = db.relationship(
         'User', secondary=followers,
@@ -92,13 +101,13 @@ class User(UserMixin, db.Model):
         return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
             digest, size)
 
-    def follow(self, user):
-        if not self.is_following(user):
-            self.followed.append(user)
+    # def follow(self, user):
+    #     if not self.is_following(user):
+    #         self.followed.append(user)
 
-    def unfollow(self, user):
-        if self.is_following(user):
-            self.followed.remove(user)
+    # def unfollow(self, user):
+    #     if self.is_following(user):
+    #         self.followed.remove(user)
 
     def is_following(self, user):
         return self.followed.filter(
@@ -129,6 +138,21 @@ class User(UserMixin, db.Model):
 @login.user_loader
 def load_user(id):
     return User.query.get(int(id))
+
+
+class Following(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    source_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    target_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    accepted = db.Column(db.Boolean, nullable=False, default=False)
+
+    def __init__(self, source_id, target_id, accepted=False):
+        self.source_id = source_id
+        self.target_id = target_id
+        self.accepted = accepted
+
+    def __repr__(self):
+        return f"User <{self.source_id}> is following user <{self.target_id}>, accepted: {self.accepted}"
 
 
 class Post(SearchableMixin, db.Model):

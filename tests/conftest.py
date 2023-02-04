@@ -55,3 +55,27 @@ def dummy_nonexisting_trail():
 @pytest.fixture()
 def anonymous_user():
     return None
+
+@pytest.fixture()
+def user_alice():
+    return{
+        "username":"alice",
+        "email":"alice@gmail.com",
+        "password":"alicepw",
+    }
+
+@pytest.fixture()
+def user_bob():
+    return{
+        "username":"bob",
+        "email":"bob@gmail.com",
+        "password":"bobpw",
+    }
+
+@pytest.fixture()
+def user_charlie():
+    return{
+        "username":"charlie",
+        "email":"charlie@gmail.com",
+        "password":"charliepw",
+    }
