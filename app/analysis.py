@@ -31,6 +31,7 @@ def calculate_stats(hikes):
         total_distances[trail] = 0
         for range in ranges:
             total_distances[trail] += range[1]-range[0]
+        total_distances[trail] = round(total_distances[trail],1)
         percentages[trail] = round(100*total_distances[trail]/trail_lengths[trail],1)
     return {
         'total_distances': total_distances,

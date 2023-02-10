@@ -79,3 +79,19 @@ def user_charlie():
         "email":"charlie@gmail.com",
         "password":"charliepw",
     }
+
+@pytest.fixture()
+def user_david():
+    return{
+        "username":"david",
+        "email":"david@gmail.com",
+        "password":"davidpw",
+    }
+
+@pytest.fixture()
+def user_elvis():
+    return{
+        "username":"elvis",
+        "email":"elvis@gmail.com",
+        "password":"elvispw",
+    }

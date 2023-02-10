@@ -7,11 +7,14 @@ import csv
 from langdetect import detect, LangDetectException
 from app import db
 from app.main.forms import EditProfileForm, EmptyForm, PostForm, SearchForm
-from app.models import User, Post, Trail, Hike
+from app.models import User, Post, Trail, Hike, Following, PrivacyOption
 from app.translate import translate
 from app.main import bp
 from app.trails.manager import TrailManager
+from app.hikes.manager import HikeManager
 import math
+from app.auth.manager import UserManager
+from flask_login import AnonymousUserMixin
 
 
 @bp.before_app_request
@@ -42,18 +45,48 @@ def index():
 @bp.route('/user/<username>')
 @login_required
 def user(username):
-    user = User.query.filter_by(username=username).first_or_404()
-    page = request.args.get('page', 1, type=int)
-    posts = user.posts.order_by(Post.timestamp.desc()).paginate(
-        page=page, per_page=current_app.config['POSTS_PER_PAGE'],
-        error_out=False)
-    next_url = url_for('main.user', username=user.username,
-                       page=posts.next_num) if posts.has_next else None
-    prev_url = url_for('main.user', username=user.username,
-                       page=posts.prev_num) if posts.has_prev else None
-    form = EmptyForm()
-    return render_template('user.html', user=user, posts=posts.items,
-                           next_url=next_url, prev_url=prev_url, form=form)
+    if current_user.username == username: # view own profile
+        print("viewing own profile")
+        um = UserManager(session=db.session,user=current_user)
+        user_self = um.list_users(username=username)
+        outgoing_follows = um.get_outgoing_follows()
+        incoming_follows = um.get_incoming_follows()
+        
+        outgoing = []
+        for name, accepted in outgoing_follows.items():
+            user = User.query.where(User.username==name).one()
+            outgoing.append((name, accepted))
+
+        incoming = []
+        for name, accepted in incoming_follows.items():
+            user = User.query.where(User.username==name).one()
+            incoming.append((name, accepted))
+
+        return render_template('user_self.html', user=user_self, outgoing=outgoing, incoming=incoming, privacy=user_self.privacy.value)
+
+    elif current_user.is_authenticated: # view someone else's profile as user
+        print("viewing someone else's profile while logged in")
+        um = UserManager(session=db.session,user=current_user)
+        user = um.list_users(username=username)
+        outgoing_follows = um.get_outgoing_follows()
+        friends = um.follow_status(target_username=username)
+        return render_template('user_other.html', user=user, friends=friends, target_privacy=user.privacy.value)
+
+    else: # view someone else's profile anonymously
+        print("viewing someone else's profile anonymously")
+    return redirect(url_for('main.index'))
+
+    # um = UserManager(session=db.session,user=current_user)
+    # user = User.query.filter_by(username=username).first_or_404()
+    # form = EmptyForm()
+    # outgoing_follows = um.get_outgoing_follows()
+    # incoming_follows = um.get_incoming_follows()
+
+    # friends = None
+    # if not isinstance(current_user, AnonymousUserMixin):
+    #     hm = HikeManager(session=db.session,user=current_user)
+    #     friends = um.follow_status(target_username=username)
+    # return render_template('user.html', user=user, form=form, friends=friends)
 
 
 @bp.route('/edit_profile', methods=['GET', 'POST'])
@@ -63,54 +96,84 @@ def edit_profile():
     if form.validate_on_submit():
         current_user.username = form.username.data
         current_user.about_me = form.about_me.data
+        current_user.privacy = form.privacy.data
         db.session.commit()
-        flash(_('Your changes have been saved.'))
-        return redirect(url_for('main.edit_profile'))
+        flash('Your changes have been saved.')
+        return redirect(url_for('main.user', username=current_user.username))
     elif request.method == 'GET':
         form.username.data = current_user.username
         form.about_me.data = current_user.about_me
-    return render_template('edit_profile.html', title=_('Edit Profile'),
-                           form=form)
+        form.privacy.data = current_user.privacy.value
+    return render_template('edit_profile.html', title='Edit Profile',form=form)
 
 
 @bp.route('/follow/<username>', methods=['POST'])
 @login_required
 def follow(username):
-    form = EmptyForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=username).first()
-        if user is None:
-            flash(_('User %(username)s not found.', username=username))
-            return redirect(url_for('main.index'))
-        if user == current_user:
-            flash(_('You cannot follow yourself!'))
+    um = UserManager(session=db.session, user=current_user)
+    target_user = um.list_users(username=username)
+    if target_user:
+        if not current_user.is_following(target_user):
+            um.follow_user(target_username=target_user.username)
+            flash('Follow request sent')
             return redirect(url_for('main.user', username=username))
-        current_user.follow(user)
-        db.session.commit()
-        flash(_('You are following %(username)s!', username=username))
+        flash('You already sent a follow request to this user')
         return redirect(url_for('main.user', username=username))
-    else:
-        return redirect(url_for('main.index'))
+    flash('User does not exist')
+    return redirect(url_for('main.index'))
 
 
 @bp.route('/unfollow/<username>', methods=['POST'])
 @login_required
 def unfollow(username):
-    form = EmptyForm()
-    if form.validate_on_submit():
-        user = User.query.filter_by(username=username).first()
-        if user is None:
-            flash(_('User %(username)s not found.', username=username))
-            return redirect(url_for('main.index'))
-        if user == current_user:
-            flash(_('You cannot unfollow yourself!'))
-            return redirect(url_for('main.user', username=username))
-        current_user.unfollow(user)
-        db.session.commit()
-        flash(_('You are not following %(username)s.', username=username))
+    um = UserManager(session=db.session, user=current_user)
+    target_user = um.list_users(username=username)
+    if target_user:
+        if current_user.is_following(target_user):
+            um.unfollow_user(target_username=target_user.username)
+            flash('Removed follower')
         return redirect(url_for('main.user', username=username))
-    else:
-        return redirect(url_for('main.index'))
+    flash('User does not exist')
+    return redirect(url_for('main.index'))
+
+
+@bp.route('/accept_follow/<username>', methods=['POST'])
+@login_required
+def accept_follow(username):
+    um = UserManager(session=db.session, user=current_user)
+    source_user = um.list_users(username=username)
+    if source_user and current_user.privacy is not PrivacyOption.public:
+        if source_user.is_following(current_user) and not source_user.is_following_accepted(current_user):
+            um.accept_following(source_username=source_user.username)
+            flash('Accepted follow request')
+    return redirect(url_for('main.user',username=current_user.username))
+
+
+@bp.route('/remove_follow/<username>', methods=['POST'])
+@login_required
+def remove_follow(username):
+    print('removing follow')
+    um = UserManager(session=db.session, user=current_user)
+    source_user = um.list_users(username=username)
+    if source_user and current_user.privacy is not PrivacyOption.public:
+        print('1')
+        if source_user.is_following(current_user):
+            print('2')
+            um.remove_following(source_username=source_user.username)
+            flash('Removed follower')
+    return redirect(url_for('main.user',username=current_user.username))
+
+
+@bp.route('/cancel_follow_request/<username>', methods=['POST'])
+@login_required
+def cancel_follow_request(username):
+    um = UserManager(session=db.session, user=current_user)
+    target_user = um.list_users(username=username)
+    if target_user:
+        if source_user.is_following(target_user):
+            um.cancel_follow_request(target_username=target_user.username)
+            flash('Removed follow request')
+    return redirect(url_for('main.user',username=current_user.username))
 
 
 @bp.route('/translate', methods=['POST'])

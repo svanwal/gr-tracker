@@ -110,9 +110,9 @@ def delete_trail(name):
         return redirect(url_for('trails.show_all_trails'))
 
     tm = TrailManager(session=db.session,user=current_user)
-    tm.delete_trail(name=name)
+    trail = tm.delete_trail(name=name)
     flash(f"Trail {trail.dispname} has been deleted.")
-    return redirect(url_for('main.show_all_trails'))
+    return redirect(url_for('trails.show_all_trails'))
 
 
 # Show the trails on which a user has hiked

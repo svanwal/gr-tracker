@@ -67,4 +67,4 @@ def calculate_cumulative_distances(coordinates):
     return cumulative_distances
 
 def calculate_distance(km_start: float, km_end: float):
-    return abs(km_end - km_start)
+    return round(abs(km_end - km_start),1)

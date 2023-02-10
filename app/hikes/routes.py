@@ -16,12 +16,16 @@ from app.analysis import calculate_stats
 from app.auth.manager import UserManager
 import json
 from markupsafe import escape
+from flask_login import AnonymousUserMixin
 
 
 # View all hikes
 @bp.route('/hikes', methods=['GET', 'POST'])
 def show_all_hikes():
-    hm = HikeManager(session=db.session,user=current_user)
+    if isinstance(current_user, AnonymousUserMixin):
+        hm = HikeManager(session=db.session)
+    else:
+        hm = HikeManager(session=db.session,user=current_user)
     hikes = hm.list_hikes()
     form = TrailSelectionForm()
     if form.validate_on_submit():
@@ -50,10 +54,12 @@ def show_user_hikes(username):
 @login_required
 def show_single_hike(id):
     hm = HikeManager(session=db.session,user=current_user)
-    hike = hm.list_hikes(id=id)
+    hike = hm.list_hikes(hike_id=id)
     trail = hike.path
     geometry = trail.get_geometry()
-    hike_coordinates = trail.get_coordinate_range(km_start=hike.km_start,km_end=hike.km_end)
+    min_km = min(hike.km_start, hike.km_end)
+    max_km = max(hike.km_start, hike.km_end)
+    hike_coordinates = trail.get_coordinate_range(km_start=min_km,km_end=max_km)
     return render_template(
         'hike.html',
         title='Hike',
@@ -75,7 +81,8 @@ def show_trail_hikes(trailname,username):
     um = UserManager(session=db.session,user=current_user)
     user = um.list_users(username=username)
     hm = HikeManager(session=db.session,user=current_user)
-    hikes = hm.list_hikes_by_user_on_trail(user.id, trail.id)
+    # hikes = hm.list_hikes_by_user_on_trail(user.id, trail.id)
+    hikes = hm.list_hikes(username=username, trail_name=trail.name)
     stats = calculate_stats(hikes)
     geometry = trail.get_geometry()
     hikes_coordinates = []
@@ -125,7 +132,7 @@ def add_hike(name):
 @login_required
 def edit_hike(id):
     hm = HikeManager(session=db.session,user=current_user)
-    hike = hm.list_hikes(id=id)
+    hike = hm.list_hikes(hike_id=id)
     trail = hike.path
     geometry = trail.get_geometry()
     hike_coordinates = trail.get_coordinate_range(km_start=hike.km_start,km_end=hike.km_end)

@@ -19,11 +19,11 @@
         <td>{{trail.fullname}}</td>
         <td>{{trail.length}} km</td>
         <td>{{stats.total_distances[trail.name]}} km</td>
-        <td>{{stats.percentages[trail.name]}}%</td>
+        <td>{{stats.percentages[trail.name]}} %</td>
         <td>
             <form method="GET"
                 action={{url_for("hikes.show_trail_hikes", trailname=trail.name, username=user.username)}}>
-                <button class="btn btn-info btn-sm" type="submit">
+                <button class="btn btn-secondary btn-sm" type="submit">
                     View on map
                 </button>
             </form>

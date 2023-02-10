@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<table class="table table-hover">
+    <tr>
+        <td width="256px"><img src="{{ user.avatar(256) }}"></td>
+        <td>
+            <h1>User: {{ user.username }}</h1>
+            {% if user.about_me %}
+            <p>{{ user.about_me }}</p>
+            {% endif %}
+            <p>Privacy setting: {{user.privacy.value}}</p>
+        </td>
+    </tr>
+</table>
+
+<h3>friends = {{friends}}</h3>
+
+{% if target_privacy == "public" %}
+{% if friends %}
+<form style="display:inline;" method="POST" action={{url_for("main.unfollow", username=user.username, source="other")}}>
+    <button class="btn btn-secondary" type="submit">Following user. Click to unfollow.</button>
+</form>
+{% else %}
+<form style="display:inline;" method="POST" action="{{url_for("main.follow", username=user.username, source="other")}}">
+    <button class="btn btn-primary" type="submit">Follow user</button>
+</form>
+{% endif %}
+
+{% elif target_privacy == "friends" %}
+{% if not friends %}
+<form style="display:inline;" method="POST" action="{{url_for("main.follow", username=user.username, source="other")}}">
+    <button class="btn btn-primary" type="submit">Follow user</button>
+</form>
+{% elif friends == "pending" %}
+<form style="display:inline;" method="POST"
+    action="{{url_for("main.cancel_follow_request", username=user.username, source="other")}}">
+    <button class="btn btn-primary" type="submit">Request pending. Click to cancel.</button>
+</form>
+{% else %}
+<form style="display:inline;" method="POST"
+    action="{{url_for("main.cancel_follow_request", username=user.username, source="other")}}">
+    <button class="btn btn-primary" type="submit">Click to cancel following.</button>
+</form>
+{% endif %}
+
+
+{% else %}
+<h4>User cannot be followed!</h4>
+{% endif %}
+
+
+
+
+{% endblock %}

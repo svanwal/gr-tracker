@@ -101,17 +101,17 @@ class User(UserMixin, db.Model):
         return 'https://www.gravatar.com/avatar/{}?d=identicon&s={}'.format(
             digest, size)
 
-    # def follow(self, user):
-    #     if not self.is_following(user):
-    #         self.followed.append(user)
+    def is_following(self, target_user):
+        following = Following.query.where(Following.source_id==self.id).where(Following.target_id==target_user.id).one_or_none()
+        if following:
+            return True
+        return False
 
-    # def unfollow(self, user):
-    #     if self.is_following(user):
-    #         self.followed.remove(user)
-
-    def is_following(self, user):
-        return self.followed.filter(
-            followers.c.followed_id == user.id).count() > 0
+    def is_following_accepted(self, target_user):
+        following = Following.query.where(Following.source_id==self.id).where(Following.target_id==target_user.id).one_or_none()
+        if following and following.accepted:
+            return True
+        return False
 
     def followed_posts(self):
         followed = Post.query.join(

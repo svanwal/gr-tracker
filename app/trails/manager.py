@@ -28,8 +28,10 @@ class TrailManager():
             raise AuthorizationException
         trail = Trail.query.where(Trail.name==name).one_or_none()
         if trail:
+            print('deleted trail')
             self.session.delete(trail)
-            self.session.commit
+            self.session.commit()
+        return trail
     
     def edit_trail(self, id: int, new_name:str="", new_dispname:str="", new_fullname:str=""):
         if not self.user.is_admin:

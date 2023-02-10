@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+<table class="table table-hover">
+    <tr>
+        <td width="256px"><img src="{{ user.avatar(256) }}"></td>
+        <td>
+            <h1>User: {{ user.username }}</h1>
+            {% if user.about_me %}
+            <p>{{ user.about_me }}</p>
+            {% endif %}
+            <p>Privacy setting: {{user.privacy.value}}</p>
+            {% if user == current_user %}
+            <p><a href="{{ url_for('main.edit_profile') }}">Edit your profile</a></p>
+            {% endif %}
+        </td>
+    </tr>
+</table>
+
+{% if outgoing %}
+<h3>Users you are following:</h3>
+<table class="table table-hover">
+    {% for follow in outgoing %}
+    <tr>
+        <td style="vertical-align:middle;">{{follow[0]}}</td>
+        <td>
+            <form style="display:inline;" method="POST"
+                action="{{url_for("main.unfollow", username=follow[0], source="self")}}">
+                <button class="btn btn-secondary btn-sm" type="submit">
+                    {% if follow[1] %}
+                    Click to unfollow
+                    {% else %}
+                    Request pending, click to cancel
+                    {% endif %}
+                </button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<h3>You are not following anyone!</h3>
+{% endif %}
+
+{% if privacy == "private" %}
+<h3>Your profile is set to private, so you cannot have any followers.</h3>
+
+{% elif incoming %}
+<h3>Your followers:</h3>
+<table class="table table-hover">
+    {% for follow in incoming %}
+    <tr>
+        <td style="vertical-align:middle;">{{follow[0]}}</td>
+        <td>
+            {% if privacy != "public" %}
+            {% if follow[1] %}
+            <form style="display:inline;" method="POST"
+                action="{{url_for("main.remove_follow", username=follow[0], source="self")}}">
+                <button class="btn btn-secondary btn-sm" type="submit">
+                    Click to remove follower
+                </button>
+            </form>
+            {% else %}
+            <form style="display:inline;" method="POST"
+                action="{{url_for("main.accept_follow", username=follow[0], source="self")}}">
+                <button class="btn btn-secondary btn-sm" type="submit">
+                    Click to accept follow request
+                </button>
+            </form>
+            {% endif %}
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% else %}
+<h3>You do not have any followers!</h3>
+{% endif %}
+
+{% endblock %}
