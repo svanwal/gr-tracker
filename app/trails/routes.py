@@ -8,7 +8,9 @@ from langdetect import detect, LangDetectException
 from app import db
 from app.trails.forms import TrailForm
 from app.trails.manager import TrailManager
-from app.models import User, Trail, Hike
+from app.hikes.manager import HikeManager
+from app.auth.manager import UserManager
+from app.models import User, Trail, Hike, PrivacyOption
 from app.trails import bp
 import math
 from app.analysis import calculate_stats
@@ -118,6 +120,17 @@ def delete_trail(name):
 # Show the trails on which a user has hiked
 @bp.route('/trails/user/<username>', methods=['GET'])
 def show_user_trails(username):
+    um = UserManager(session=db.session,user=current_user)
+    user = um.list_users(username=username)
+    if user.privacy is PrivacyOption.public:
+        friends = True
+    elif current_user.is_authenticated:
+        friends = current_user.is_following_accepted(target_user=user)
+    else:
+        friends = False
+    if not friends and not current_user.username==username:
+        flash(f"You do not have permissions to view hikes by user {user.username}")
+        return redirect(url_for('main.index'))
     tm = TrailManager(session=db.session,user=current_user)
     us = tm.get_user_statistics(username=username)
     return render_template(

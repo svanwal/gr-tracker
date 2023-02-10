@@ -66,6 +66,7 @@ class HikeManager():
                 .join(Trail, Hike.trail_id == Trail.id, isouter=True)
                 .where(Hike.user_id == self.user.id)
                 .where(Trail.name == trail_name)
+                .order_by(Hike.timestamp.desc())
                 .all() )
         
         if hike_id: # return a particular hike by id
@@ -75,7 +76,7 @@ class HikeManager():
             return None
 
         # list all hikes
-        return Hike.query.where(Hike.user_id == self.user.id).all()
+        return Hike.query.where(Hike.user_id == self.user.id).order_by(Hike.timestamp.desc()).all()
 
     def list_hikes_as_anonymous_user(self, username="", hike_id="", trail_name=""):
         if username: # return all hikes by a particular user
@@ -85,11 +86,13 @@ class HikeManager():
                 .where(Hike.walker.username==username)
                 .where(Hike.path.name==trail_name)
                 .where(Hike.walker.privacy==PrivacyOption.public)
+                .order_by(Hike.timestamp.desc())
                 .all() )
             return ( Hike.query
             .join(User, Hike.user_id==User.id, isouter=True)
             .where(User.username==username)
             .where(Hike.walker.privacy==PrivacyOption.public)
+            .order_by(Hike.timestamp.desc())
             .all() )
 
         if hike_id: # return a particular hike by id
@@ -102,7 +105,7 @@ class HikeManager():
         return (Hike.query
         .join(User, Hike.user_id==User.id, isouter=True)
         .where(User.privacy==PrivacyOption.public)
-        .order_by(Hike.timestamp)
+        .order_by(Hike.timestamp.desc())
         .all())
 
     def list_hikes_as_regular_user(self, username="", hike_id="", trail_name=""):
@@ -118,9 +121,10 @@ class HikeManager():
                     .join(Trail, Hike.trail_id==Trail.id, isouter=True)
                     .where(User.username==username)
                     .where(Trail.name==trail_name)
+                    .order_by(Hike.timestamp.desc())
                     .all())
                 # all of the user's hikes
-                return Hike.query.join(User, Hike.user_id==User.id, isouter=True).where(User.username==username).all()
+                return Hike.query.join(User, Hike.user_id==User.id, isouter=True).where(User.username==username).order_by(Hike.timestamp.desc()).all()
             return  None
 
         if hike_id: # return a particular hike by id
@@ -131,7 +135,7 @@ class HikeManager():
             return None
         
         # list all hikes
-        raw_hikes = Hike.query.order_by(Hike.timestamp).all()
+        raw_hikes = Hike.query.order_by(Hike.timestamp.desc()).all()
         hikes = []
         for hike in raw_hikes:
             friends = self.user.is_following_accepted(hike.walker)

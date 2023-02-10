@@ -11,7 +11,7 @@ from app.hikes import bp
 from app.hikes.forms import HikeForm, TrailSelectionForm
 from app.hikes.manager import HikeManager
 from app.trails.manager import TrailManager
-from app.models import User, Trail, Hike
+from app.models import User, Trail, Hike, PrivacyOption
 from app.analysis import calculate_stats
 from app.auth.manager import UserManager
 import json
@@ -37,24 +37,38 @@ def show_all_hikes():
 
 # View all hikes by a specific user
 @bp.route('/hikes/user/<username>', methods=['GET', 'POST'])
-@login_required
 def show_user_hikes(username):
     hm = HikeManager(session=db.session,user=current_user)
     hikes = hm.list_hikes(username=username)
+    um = UserManager(session=db.session,user=current_user)
+    user = um.list_users(username=username)
+
+    if user.privacy is PrivacyOption.public:
+        friends = True
+    elif current_user.is_authenticated:
+        friends = current_user.is_following_accepted(target_user=user)
+    else:
+        friends = False
+    if not friends and not current_user.username==username:
+        flash(f"You do not have permissions to view hikes by user {user.username}")
+        return redirect(url_for('main.index'))
+
     form = TrailSelectionForm()
     if form.validate_on_submit():
         tm = TrailManager(session=db.session,user=current_user)
         trail = tm.list_trails(name=form.trail.data)
         return redirect(url_for('hikes.add_hike', name=trail.name))
-    return render_template('hikes.html', title='Hike', hikes=hikes, username=username, form=form)
+    return render_template('hikes.html', title='Hike', hikes=hikes, username=username, form=form, friends=friends)
 
 
 # View a single hike
 @bp.route('/hikes/<id>', methods=['GET'])
-@login_required
 def show_single_hike(id):
     hm = HikeManager(session=db.session,user=current_user)
     hike = hm.list_hikes(hike_id=id)
+    if not hike:
+        flash(f"You do not have permissions to view this hike")
+        return redirect(url_for('main.index'))
     trail = hike.path
     geometry = trail.get_geometry()
     min_km = min(hike.km_start, hike.km_end)
@@ -74,12 +88,22 @@ def show_single_hike(id):
 
 # View a user's hikes on a specific trail, with stats
 @bp.route('/hikes/<trailname>/<username>', methods=['GET'])
-@login_required
 def show_trail_hikes(trailname,username):
     tm = TrailManager(session=db.session,user=current_user)
     trail = tm.list_trails(name=trailname)
     um = UserManager(session=db.session,user=current_user)
     user = um.list_users(username=username)
+
+    if user.privacy is PrivacyOption.public:
+        friends = True
+    elif current_user.is_authenticated:
+        friends = current_user.is_following_accepted(target_user=user)
+    else:
+        friends = False
+    if not friends and not current_user.username==username:
+        flash(f"You do not have permissions to view hikes by user {user.username}")
+        return redirect(url_for('main.index'))
+
     hm = HikeManager(session=db.session,user=current_user)
     # hikes = hm.list_hikes_by_user_on_trail(user.id, trail.id)
     hikes = hm.list_hikes(username=username, trail_name=trail.name)
@@ -133,6 +157,11 @@ def add_hike(name):
 def edit_hike(id):
     hm = HikeManager(session=db.session,user=current_user)
     hike = hm.list_hikes(hike_id=id)
+
+    if current_user.id is not hike.user_id:
+        flash(f"You cannot edit hikes submitted by other users.")
+        return redirect(url_for('main.index'))
+
     trail = hike.path
     geometry = trail.get_geometry()
     hike_coordinates = trail.get_coordinate_range(km_start=hike.km_start,km_end=hike.km_end)
@@ -165,6 +194,12 @@ def edit_hike(id):
 @login_required
 def delete_hike(id):
     hm = HikeManager(session=db.session,user=current_user)
+    hike = hm.list_hikes(hike_id=id)
+
+    if current_user.id is not hike.user_id:
+        flash(f"You cannot edit hikes submitted by other users.")
+        return redirect(url_for('main.index'))
+
     hike = hm.delete_hike(id=id)
     flash(f"Your hike has been deleted.")
     return redirect(url_for('hikes.show_all_hikes'))

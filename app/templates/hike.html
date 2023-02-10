@@ -15,12 +15,14 @@
         <form style="display:inline;" method="GET" action={{url_for("hikes.show_all_hikes")}}>
             <button class="btn btn-secondary" type="submit">Back to all hikes</button>
         </form>
+        {% if hike.walker.username == current_user.username %}
         <form style="display:inline;" method="GET" action={{url_for("hikes.edit_hike", id=hike.id)}}>
             <button class="btn btn-warning" type="submit">Edit</button>
         </form>
         <form style="display:inline;" method="POST" action={{url_for("hikes.delete_hike", id=hike.id)}}>
             <button class="btn btn-danger" type="submit">Delete</button>
         </form>
+        {% endif %}
     </div>
 </div>
 
