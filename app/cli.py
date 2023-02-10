@@ -114,6 +114,36 @@ def register(app):
         else:
             felicia = um.list_users(username="felicia")
 
+        # Adding friendships and follows
+        um_steven = UserManager(session=db.session, user=steven) # public
+        um_steven.follow_user(target_username="katherine")
+        um_steven.follow_user(target_username="jay")
+
+        um_katherine = UserManager(session=db.session, user=katherine) # public
+        um_katherine.follow_user(target_username="steven")
+        um_katherine.follow_user(target_username="jay")
+
+        um_jay = UserManager(session=db.session, user=jay) # public
+        um_jay.follow_user(target_username="steven")
+        um_jay.follow_user(target_username="anna")
+
+        um_anna = UserManager(session=db.session, user=anna) # friends
+        um_anna.follow_user(target_username="steven")
+        
+        um_bart = UserManager(session=db.session, user=bart) # friends
+        um_bart.follow_user(target_username="steven")
+        um_bart.follow_user(target_username="jay")
+        um_bart.follow_user(target_username="anna")
+
+        um_felicia = UserManager(session=db.session, user=felicia) # private
+        um_felicia.follow_user(target_username="steven")
+        um_felicia.follow_user(target_username="katherine")
+        um_felicia.follow_user(target_username="bart")
+
+        um_anna.accept_following(source_username="jay")
+        um_anna.accept_following(source_username="bart")
+        um_bart.accept_following(source_username="felicia")
+
         # Getting trails
         grp_groenegordel = tm.list_trails(name="grp-groenegordel") # 147.7 km
         grp_heuvelland = tm.list_trails(name="grp-heuvelland") # 131.6 km 
@@ -233,13 +263,184 @@ def register(app):
             timestamp=date(year=2020,month=6,day=27),
         )
 
+        # Adding hikes for Jay
+        hm_jay = HikeManager(session=db.session,user=jay)
+        hikes = Hike.query.where(Hike.user_id==jay.id).all()
+        for hike in hikes:
+            db.session.delete(hike)
+        db.session.commit()
+        hm_jay.add_hike(
+            trail_id=grp_heuvelland.id,
+            km_start=12.0,
+            km_end=31.2,
+            timestamp=date(year=2018,month=11,day=5),
+        )
+        hm_jay.add_hike(
+            trail_id=grp_heuvelland.id,
+            km_start=31.0,
+            km_end=45.5,
+            timestamp=date(year=2018,month=11,day=9),
+        )
+        hm_jay.add_hike(
+            trail_id=grp_heuvelland.id,
+            km_start=47.0,
+            km_end=68.2,
+            timestamp=date(year=2018,month=11,day=19),
+        )
+        hm_jay.add_hike(
+            trail_id=grp_heuvelland.id,
+            km_start=68.0,
+            km_end=95.7,
+            timestamp=date(year=2018,month=11,day=25),
+        )
+        hm_jay.add_hike(
+            trail_id=grp_heuvelland.id,
+            km_start=98.3,
+            km_end=115.7,
+            timestamp=date(year=2018,month=11,day=30),
+        )
 
+        # Adding hikes for Anna
+        hm_anna = HikeManager(session=db.session,user=anna)
+        hikes = Hike.query.where(Hike.user_id==anna.id).all()
+        for hike in hikes:
+            db.session.delete(hike)
+        db.session.commit()
+        hm_anna.add_hike(
+            trail_id=gr5a_ronde.id,
+            km_start=150.0,
+            km_end=162.2,
+            timestamp=date(year=2017,month=1,day=2),
+        )
+        hm_anna.add_hike(
+            trail_id=gr5a_ronde.id,
+            km_start=164.0,
+            km_end=178.2,
+            timestamp=date(year=2017,month=2,day=3),
+        )
+        hm_anna.add_hike(
+            trail_id=gr5a_ronde.id,
+            km_start=168.0,
+            km_end=188.2,
+            timestamp=date(year=2017,month=3,day=4),
+        )
+        hm_anna.add_hike(
+            trail_id=gr5a_ronde.id,
+            km_start=201.5,
+            km_end=222.2,
+            timestamp=date(year=2017,month=4,day=5),
+        )
+        hm_anna.add_hike(
+            trail_id=grp_groenegordel.id,
+            km_start=82.3,
+            km_end=99.7,
+            timestamp=date(year=2019,month=3,day=8),
+        )
+        hm_anna.add_hike(
+            trail_id=grp_groenegordel.id,
+            km_start=99.5,
+            km_end=110.7,
+            timestamp=date(year=2019,month=3,day=19),
+        )
+        hm_anna.add_hike(
+            trail_id=grp_groenegordel.id,
+            km_start=110.6,
+            km_end=125.7,
+            timestamp=date(year=2019,month=4,day=10),
+        )
+        hm_anna.add_hike(
+            trail_id=grp_waasreynaert.id,
+            km_start=56.6,
+            km_end=67.7,
+            timestamp=date(year=2023,month=1,day=5),
+        )
+        hm_anna.add_hike(
+            trail_id=gr128.id,
+            km_start=36.2,
+            km_end=57.9,
+            timestamp=date(year=2023,month=2,day=10),
+        )
 
+        # Adding hikes for Bart
+        hm_bart = HikeManager(session=db.session,user=bart)
+        hikes = Hike.query.where(Hike.user_id==bart.id).all()
+        for hike in hikes:
+            db.session.delete(hike)
+        db.session.commit()
+        hm_bart.add_hike(
+            trail_id=gr128.id,
+            km_start=66.0,
+            km_end=89.5,
+            timestamp=date(year=2019,month=10,day=12),
+        )
+        hm_bart.add_hike(
+            trail_id=gr128.id,
+            km_start=89.0,
+            km_end=105.2,
+            timestamp=date(year=2019,month=10,day=24),
+        )
+        hm_bart.add_hike(
+            trail_id=gr128.id,
+            km_start=105.0,
+            km_end=124.7,
+            timestamp=date(year=2019,month=10,day=28),
+        )
+        hm_bart.add_hike(
+            trail_id=grp_waasreynaert.id,
+            km_start=27.6,
+            km_end=38.9,
+            timestamp=date(year=2020,month=7,day=5),
+        )
+        hm_bart.add_hike(
+            trail_id=grp_waasreynaert.id,
+            km_start=38.6,
+            km_end=54.9,
+            timestamp=date(year=2020,month=7,day=15),
+        )
+        hm_bart.add_hike(
+            trail_id=grp_waasreynaert.id,
+            km_start=54.0,
+            km_end=72.2,
+            timestamp=date(year=2020,month=7,day=21),
+        )
+        hm_bart.add_hike(
+            trail_id=grp_groenegordel.id,
+            km_start=11.6,
+            km_end=25.7,
+            timestamp=date(year=2019,month=4,day=20),
+        )
 
-
-
-
-
+        # Adding hikes for Felicia
+        hm_felicia = HikeManager(session=db.session,user=felicia)
+        hikes = Hike.query.where(Hike.user_id==felicia.id).all()
+        for hike in hikes:
+            db.session.delete(hike)
+        db.session.commit()
+        hm_felicia.add_hike(
+            trail_id=gr5a_ronde.id,
+            km_start=100.0,
+            km_end=120.0,
+            timestamp=date(year=2019,month=10,day=12),
+        )
+        hm_felicia.add_hike(
+            trail_id=gr5a_ronde.id,
+            km_start=120.0,
+            km_end=140.0,
+            timestamp=date(year=2019,month=10,day=13),
+        )
+        hm_felicia.add_hike(
+            trail_id=gr5a_ronde.id,
+            km_start=140.0,
+            km_end=150.0,
+            timestamp=date(year=2019,month=10,day=14),
+        )
+        hm_felicia.add_hike(
+            trail_id=gr5a_ronde.id,
+            km_start=145.0,
+            km_end=180.0,
+            timestamp=date(year=2019,month=10,day=15),
+        )
+        
     ## Trail management
     @app.cli.group()
     def trails():
