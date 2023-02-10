@@ -29,16 +29,18 @@
                 <li><a href="{{ url_for('main.index') }}">Home</a></li>
                 <li><a href="{{ url_for('trails.show_all_trails') }}">Trails</a></li>
                 <li><a href="{{ url_for('hikes.show_all_hikes') }}">Hikes</a></li>
+                {% if current_user.is_authenticated %}
                 <li><a href="{{ url_for('trails.show_user_trails', username=current_user.username) }}">My trails</a>
                 <li><a href="{{ url_for('hikes.show_user_hikes', username=current_user.username) }}">My hikes</a></li>
+                {% endif %}
                 </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
                 {% if current_user.is_anonymous %}
-                <li><a href="{{ url_for('auth.login') }}">{{ _('Login') }}</a></li>
+                <li><a href="{{ url_for('auth.login') }}">Login</a></li>
                 {% else %}
-                <li><a href="{{ url_for('main.user', username=current_user.username) }}">{{ _('Profile') }}</a></li>
-                <li><a href="{{ url_for('auth.logout') }}">{{ _('Logout') }}</a></li>
+                <li><a href="{{ url_for('main.user', username=current_user.username) }}">Profile</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">Log out</a></li>
                 {% endif %}
             </ul>
         </div>

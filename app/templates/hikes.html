@@ -9,15 +9,17 @@
 {% endif %}
 
 <table class="table table-hover">
-    <tr>
-        <td>User</td>
-        <td>Date</td>
-        <td>Trail</td>
-        <td>Distance</td>
-        <td>Start</td>
-        <td>End</td>
-        <td></td>
-    </tr>
+    <thead class="thead-dark">
+        <tr>
+            <th>User</th>
+            <th>Date</th>
+            <th>Trail</th>
+            <th>Distance</th>
+            <th>Start</th>
+            <th>End</th>
+            <th></th>
+        </tr>
+    </thead>
     {% if hikes %}
     {% for hike in hikes %}
     <tr>
