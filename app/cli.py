@@ -129,6 +129,7 @@ def register(app):
 
         um_anna = UserManager(session=db.session, user=anna) # friends
         um_anna.follow_user(target_username="steven")
+        um_anna.follow_user(target_username="bart")
         
         um_bart = UserManager(session=db.session, user=bart) # friends
         um_bart.follow_user(target_username="steven")
