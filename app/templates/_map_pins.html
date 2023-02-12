@@ -177,18 +177,60 @@
 
         })
 
+        function roundkm(value) {
+            return Math.round(10 * value) / 10
+        };
+
         // Dynamic map size
         window.onload = function () {
             setMapHeight();
         };
-
         window.onresize = function () {
             setMapHeight();
         };
-
         function setMapHeight() {
             var map = document.getElementById('map');
             map.style.height = (window.innerHeight - 300) + 'px';
         }
+
+        // change pin positions in response to field changes
+        let dmax = cumulative_distances[cumulative_distances.length - 1];
+        function field_change() {
+            // start point
+            let start_value = Math.min(Math.max(0, startfield.value), dmax);
+            let delta = [];
+            for (let i = 0; i < cumulative_distances.length; i++) {
+                delta.push(Math.abs(cumulative_distances[i] - start_value));
+            }
+            let dmin = Math.min.apply(Math, delta);
+            let index_start = delta.indexOf(dmin);
+            let c = coordinates[index_start];
+            marker_start.setLngLat([c[0], c[1]]);
+            // start end
+            let end_value = Math.min(Math.max(0, endfield.value), dmax);
+            let delta2 = [];
+            for (let i = 0; i < cumulative_distances.length; i++) {
+                delta2.push(Math.abs(cumulative_distances[i] - end_value));
+            }
+            let dmin2 = Math.min.apply(Math, delta2);
+            let index_end = delta2.indexOf(dmin2);
+            let c2 = coordinates[index_end];
+            marker_end.setLngLat([c2[0], c2[1]]);
+            // line
+            let highlight_start_index2 = Math.min(index_start, index_end)
+            let highlight_end_index2 = Math.max(index_start, index_end)
+            hike_data.geometry.coordinates = coordinates.slice(highlight_start_index2, highlight_end_index2);
+            map.getSource('hike').setData(hike_data);
+            // Set popup properties
+            let d0 = roundkm(cumulative_distances[index_start]);
+            let text_start2 = `${d0} km`
+            popup_start.setLngLat(coordinates[index_start]).setHTML(text_start2).addTo(map);
+            let d1 = roundkm(cumulative_distances[index_end]);
+            let text_end2 = `${d1} km`
+            popup_end.setLngLat(coordinates[index_end]).setHTML(text_end2).addTo(map);
+        }
+        startfield.addEventListener("input", field_change);
+        endfield.addEventListener("input", field_change);
+
     </script>
 </div>

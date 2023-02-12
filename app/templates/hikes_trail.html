@@ -3,7 +3,8 @@
 
 {% block app_content %}
 <h1>Hikes by <i>{{user.username}}</i> on trail {{trail.dispname}}</h1>
-<p>This user has completed a total of {{stats.total_distances[trail.name]}} km or {{stats.percentages[trail.name]}}% of this trail.</p> 
+<p>This user has completed a total of {{stats.total_distances[trail.name]}} km or {{stats.percentages[trail.name]}}% of
+    this trail.</p>
 
 <table class="table table-hover">
     <tr>
@@ -19,7 +20,7 @@
         <td>from {{hike.km_start}} km to {{hike.km_end}} km</td>
         <td>
             <form method="GET" action={{url_for("hikes.show_single_hike", id=hike.id)}}>
-                <button class="btn btn-primary btn-sm" type="submit">
+                <button class="btn btn-secondary btn-sm" type="submit">
                     View details
                 </button>
             </form>
