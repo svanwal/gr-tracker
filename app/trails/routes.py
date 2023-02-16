@@ -120,6 +120,7 @@ def delete_trail(name):
 # Show the trails on which a user has hiked
 @bp.route('/trails/user/<username>', methods=['GET'])
 def show_user_trails(username):
+    print('yoooo')
     um = UserManager(session=db.session,user=current_user)
     user = um.list_users(username=username)
     if user.privacy is PrivacyOption.public:
@@ -133,6 +134,8 @@ def show_user_trails(username):
         return redirect(url_for('main.index'))
     tm = TrailManager(session=db.session,user=current_user)
     us = tm.get_user_statistics(username=username)
+    print('trails:')
+    print(us.trails)
     return render_template(
         'trails_user.html',
         title='Trails by user',

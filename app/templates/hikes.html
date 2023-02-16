@@ -3,7 +3,11 @@
 
 {% block app_content %}
 {% if username %}
+{% if current_user.username == username %}
+<h1>My hikes</h1>
+{% else %}
 <h1>Hikes registered by user <i>{{username}}</i></h1>
+{% endif %}
 {% else %}
 <h1>All registered hikes</h1>
 {% endif %}
@@ -23,7 +27,13 @@
     {% if hikes %}
     {% for hike in hikes %}
     <tr>
-        <td>{{hike.walker.username}}</td>
+        <td>
+            <form method="GET" action={{url_for("main.user", username=hike.walker.username)}}>
+                <button class="btn btn-secondary btn-sm" type="submit">
+                    {{hike.walker.username}}
+                </button>
+            </form>
+        </td>
         <td>{{hike.timestamp}}</td>
         <td>{{hike.path.dispname}}</td>
         <td>{{hike.distance}} km</td>
@@ -40,6 +50,14 @@
     {% endfor %}
     {% endif %}
 </table>
+
+{% if username and not current_user.username == username %}
+<form method="GET" action={{url_for("main.user", username=username)}}>
+    <button class="btn btn-secondary btn" type="submit">
+        View {{username}}'s profile
+    </button>
+</form>
+{% endif %}
 
 {% if form and username==current_user.username %}
 <h1>Add a new hike</h1>

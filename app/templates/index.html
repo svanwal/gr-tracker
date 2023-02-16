@@ -3,10 +3,13 @@
 
 {% block app_content %}
 <h1 class="text-center">GR Tracker</h1>
-<h2 class="text-center"><i>Track your hikes on the Belgian long-distance GR network</i></h2>
+<h2 class="text-center"><i>Track your long-distance hikes in Belgium</i></h2>
 <h3 class="text-center">There are a total of {{ntrails}} trails available for tracking!</h3>
 
-<p class="text-center">To get started, use the navigation bar, or click any of the trails in the map.</p>
+<p class="text-center">To get started, use the navigation bar, or click any of the trails in the map. Please note that
+    this web app is a personal open-source project under development. As such, <b>no guarantee is made about the
+        security
+        and persistence of any data</b> submitted to this website.</p>
 
 {% include "_map_trails.html" %}
 

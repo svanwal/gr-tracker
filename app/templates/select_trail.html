@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+<h1>Select a trail to add a new hike</h1>
+
+{% if form and username==current_user.username %}
+<div class="row">
+    <div class="col-md-4">
+        {{ wtf.quick_form(
+            form=form,
+            action=url_for("hikes.show_all_hikes"),
+            method="POST")
+        }}
+    </div>
+</div>
+{% endif %}
+
+
+{% endblock %}

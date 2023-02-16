@@ -61,6 +61,21 @@ def show_user_hikes(username):
     return render_template('hikes.html', title='Hike', hikes=hikes, username=username, form=form, friends=friends)
 
 
+
+# View all hikes by a specific user
+@bp.route('/hikes/new', methods=['GET', 'POST'])
+@login_required
+def select_trail():
+    um = UserManager(session=db.session,user=current_user)
+
+    form = TrailSelectionForm()
+    if form.validate_on_submit():
+        tm = TrailManager(session=db.session,user=current_user)
+        trail = tm.list_trails(name=form.trail.data)
+        return redirect(url_for('hikes.add_hike', name=trail.name))
+    return render_template('select_trail.html', title='Hike', username=current_user.username, form=form)
+
+
 # View a single hike
 @bp.route('/hikes/<id>', methods=['GET'])
 def show_single_hike(id):

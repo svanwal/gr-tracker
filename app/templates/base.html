@@ -30,8 +30,9 @@
                 <li><a href="{{ url_for('trails.show_all_trails') }}">Trails</a></li>
                 <li><a href="{{ url_for('hikes.show_all_hikes') }}">Hikes</a></li>
                 {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('trails.show_user_trails', username=current_user.username) }}">My trails</a>
-                <li><a href="{{ url_for('hikes.show_user_hikes', username=current_user.username) }}">My hikes</a></li>
+                <li><a href="{{ url_for('trails.show_user_trails', username=current_user.username) }}">Your trails</a>
+                <li><a href="{{ url_for('hikes.show_user_hikes', username=current_user.username) }}">Your hikes</a></li>
+                <li><a href="{{ url_for('hikes.select_trail', username=current_user.username) }}">Add new hike</a></li>
                 {% endif %}
                 </li>
             </ul>

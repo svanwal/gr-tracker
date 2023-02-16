@@ -7,12 +7,14 @@
     this trail.</p>
 
 <table class="table table-hover">
-    <tr>
-        <td>Date</td>
-        <td>Distance</td>
-        <td>Section</td>
-        <td></td>
-    </tr>
+    <thead class="thead-dark">
+        <tr>
+            <th>Date</th>
+            <th>Distance</th>
+            <th>Section</th>
+            <th></th>
+        </tr>
+    </thead>
     {% for hike in hikes %}
     <tr>
         <td>{{hike.timestamp}}</td>

@@ -2,20 +2,33 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
+{% if current_user.username == user.username %}
+<h1>My trails</h1>
+<p>This page lists all GR trails on which you have submitted hikes.</p>
+{% else %}
 <h1>Trails explored by <i>{{user.username}}</i></h1>
+<p>This page lists all GR trails on which user <i>{{user.username}}</i> has submitted hikes.</p>
+{% endif %}
+
 
 <table class="table table-hover">
-    <tr>
-        <td>Name</td>
-        <td>Full name</td>
-        <td>Length</td>
-        <td>Distance completed</td>
-        <td>Percentage completed</td>
-        <td></td>
-    </tr>
+    <thead class="thead-dark">
+        <tr>
+            <th>Trail</th>
+            <th>Full name</th>
+            <th>Total distance</th>
+            <th>Completed distance</th>
+            <th>Completed percentage</th>
+            <th></th>
+        </tr>
+    </thead>
     {% for trail in trails %}
     <tr>
-        <td>{{trail.dispname}}</td>
+        <td>
+            <form style="display:inline;" method="GET" action={{url_for("trails.show_single_trail", name=trail.name)}}>
+                <button class="btn btn-secondary btn-sm" type="submit">{{trail.dispname}}</button>
+            </form>
+        </td>
         <td>{{trail.fullname}}</td>
         <td>{{trail.length}} km</td>
         <td>{{stats.total_distances[trail.name]}} km</td>
@@ -31,5 +44,13 @@
     </tr>
     {% endfor %}
 </table>
+
+{% if user.username and not current_user.username == user.username %}
+<form method="GET" action={{url_for("main.user", username=user.username)}}>
+    <button class="btn btn-secondary btn" type="submit">
+        View {{user.username}}'s profile
+    </button>
+</form>
+{% endif %}
 
 {% endblock %}

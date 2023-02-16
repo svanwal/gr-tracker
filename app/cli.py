@@ -149,7 +149,7 @@ def register(app):
         grp_groenegordel = tm.list_trails(name="grp-groenegordel") # 147.7 km
         grp_heuvelland = tm.list_trails(name="grp-heuvelland") # 131.6 km 
         grp_waasreynaert = tm.list_trails(name="grp-waasreynaert") # 176.2 km
-        gr5 = tm.list_trails(name="gr5") # 251.3 km
+        gr5 = tm.list_trails(name="gr5-vlaanderen") # 251.3 km
         gr5a_ronde = tm.list_trails(name="gr5a-ronde") # 586.4 km
         gr128 = tm.list_trails(name="gr128") # 483.1 km
         gr564 = tm.list_trails(name="gr564") # 167.3 km
