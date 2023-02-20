@@ -76,18 +76,6 @@ def user(username):
         print("viewing someone else's profile anonymously")
     return redirect(url_for('main.index'))
 
-    # um = UserManager(session=db.session,user=current_user)
-    # user = User.query.filter_by(username=username).first_or_404()
-    # form = EmptyForm()
-    # outgoing_follows = um.get_outgoing_follows()
-    # incoming_follows = um.get_incoming_follows()
-
-    # friends = None
-    # if not isinstance(current_user, AnonymousUserMixin):
-    #     hm = HikeManager(session=db.session,user=current_user)
-    #     friends = um.follow_status(target_username=username)
-    # return render_template('user.html', user=user, form=form, friends=friends)
-
 
 @bp.route('/edit_profile', methods=['GET', 'POST'])
 @login_required

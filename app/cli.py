@@ -79,38 +79,50 @@ def register(app):
             db.session.commit()
 
     @users.command()
-    def demo():
+    def delete():
+        # Setting up managers
+        um = UserManager(session=db.session)
+        usernames = ['steven','katherine','jay','anna','bart','felicia']
+        for username in usernames:
+            user = um.list_users(username=username)
+            db.session.delete(user)
+            db.session.commit()
+
+
+    @users.command()
+    @click.argument('password')
+    def init(password):
         # Setting up managers
         tm = TrailManager(session=db.session)
         um = UserManager(session=db.session)
         # Adding users
         if not um.list_users(username="steven"):
-            steven = um.add_user(username="steven",email="steven@provider.com",password="mynameissteven",privacy=PrivacyOption.public)
+            steven = um.add_user(username="steven",email="steven@provider.com",password=password,privacy=PrivacyOption.public)
         else:
             steven = um.list_users(username="steven")
 
         if not um.list_users(username="katherine"):
-            katherine = um.add_user(username="katherine",email="katherine@provider.com",password="mynameiskatherine",privacy=PrivacyOption.public)
+            katherine = um.add_user(username="katherine",email="katherine@provider.com",password=password,privacy=PrivacyOption.public)
         else:
             katherine = um.list_users(username="katherine")
 
         if not um.list_users(username="jay"):
-            jay = um.add_user(username="jay",email="jay@provider.com",password="mynameisjay",privacy=PrivacyOption.public)
+            jay = um.add_user(username="jay",email="jay@provider.com",password=password,privacy=PrivacyOption.public)
         else:
             jay = um.list_users(username="jay")
 
         if not um.list_users(username="anna"):
-            anna = um.add_user(username="anna",email="anna@provider.com",password="mynameisanna",privacy=PrivacyOption.friends)
+            anna = um.add_user(username="anna",email="anna@provider.com",password=password,privacy=PrivacyOption.friends)
         else:
             anna = um.list_users(username="anna")
 
         if not um.list_users(username="bart"):
-            bart = um.add_user(username="bart",email="bart@provider.com",password="mynameisbart",privacy=PrivacyOption.friends)
+            bart = um.add_user(username="bart",email="bart@provider.com",password=password,privacy=PrivacyOption.friends)
         else:
             bart = um.list_users(username="bart")
 
         if not um.list_users(username="felicia"):
-            felicia = um.add_user(username="felicia",email="felicia@provider.com",password="mynameisfelicia",privacy=PrivacyOption.private)
+            felicia = um.add_user(username="felicia",email="felicia@provider.com",password=password,privacy=PrivacyOption.private)
         else:
             felicia = um.list_users(username="felicia")
 
@@ -469,3 +481,10 @@ def register(app):
             else:
                 print(f"Trail {name} already exists.")
         db.session.commit()
+
+    @trails.command()
+    def delete():
+        trails = Trail.query.all()
+        for trail in trails:
+            db.session.delete(trail)
+            db.session.commit()
